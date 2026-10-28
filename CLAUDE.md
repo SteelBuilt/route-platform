@@ -42,10 +42,20 @@ Next.js (App Router, TypeScript) on Netlify Free · Postgres (Neon Free in prod,
 
 ## Commands
 
-Not yet scaffolded (Phase 1 Step 2). Planned:
+- `npm run dev`: migrate + start on local PGlite (`.data/pglite`); no external services. Dev emails at `/dev/outbox`.
+- `npm test`: Vitest unit + integration (fresh in-memory PGlite per file)
+- `npm run ci`: typecheck + lint + test
+- `npm run test:e2e`: Playwright, mobile + desktop (needs `npx playwright install chromium` once)
+- `npm run db:generate`: new migration from schema changes. Custom SQL (RLS) via `npx drizzle-kit generate --custom --name <x>`
+- `npm run db:migrate`: apply migrations + load reference data from `config/defaults.json`
+- Platform admins: emails listed in `PLATFORM_ADMIN_EMAILS` (e.g. in `.env.local`) at sign-up
+- `npm run seed:demo`: labeled demo data (Step 3)
 
-- `npm run dev`: start the app on PGlite (no external services needed)
-- `npm test`: unit + integration (CI command)
-- `npm run test:e2e`: Playwright, desktop + mobile viewport
-- `npm run db:migrate` / `npm run db:generate`
-- `npm run seed:demo`: labeled demo data
+## Code conventions
+
+- Next.js 16: read `node_modules/next/dist/docs/` before using unfamiliar APIs (see AGENTS.md). Cache Components is off.
+- Domain logic lives in `src/server/domain/*` and takes a `RequestContext`; pages and server actions stay thin.
+- Tenant reads/writes go through `withTenant(ctx, tx => …)`. `withSystem` only for audited trusted paths; `withPlatformAdmin` for admin.
+- New tables: add RLS policies + grants in a custom migration, and add isolation tests.
+- Throw `AppError` subclasses (`NotFound` for cross-org, `Forbidden`, `Invalid`, `Conflict`); `runAction` maps them to form errors.
+- Tests assert DB errors with `expectDbError` (Drizzle wraps the Postgres message in `cause`).

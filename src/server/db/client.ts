@@ -1,5 +1,6 @@
 // Database client. Neon (serverless Postgres) when DATABASE_URL is set,
 // otherwise an embedded PGlite database for local development and tests.
+import { mkdirSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import type { PgDatabase, PgQueryResultHKT, PgTransaction } from "drizzle-orm/pg-core";
@@ -26,6 +27,7 @@ function create(): Holder {
     return { db: drizzleNeon(pool, { schema }) as unknown as DB, kind: "neon" };
   }
   const dir = url?.startsWith("pglite:") ? url.slice("pglite:".length) : env().PGLITE_DIR;
+  if (dir !== "memory") mkdirSync(dir, { recursive: true });
   const pglite = new PGlite(dir === "memory" ? undefined : dir);
   return { db: drizzlePglite(pglite, { schema }) as unknown as DB, kind: "pglite", pglite };
 }

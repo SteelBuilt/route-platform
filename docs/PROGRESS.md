@@ -5,7 +5,10 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 ## Current state
 
 - **Phase 1, Step 1 complete and approved** (2026-10-28).
-- **Phase 1, Step 2 (foundation) in progress** on branch `phase-1`.
+- **Phase 1, Step 2 (foundation) done** on branch `phase-1`, except the Playwright browser run (see below).
+- **Tests (2026-10-28):** `npm test`: 122 passed, 0 failed (6 files). Typecheck, lint and `next build` clean.
+- **Browser-verified (mobile 375×812, local dev):** sign up → create org → invite crew member → dev outbox link → invitee sign-up → accept → crew member sees limited dashboard, is redirected away from Team, gets 404 on admin; platform admin sees catalog and adds a category.
+- **Next:** Step 3 (core marketplace slice + landing page).
 
 ## Phase 1: Assessment, foundation, core marketplace
 
@@ -19,21 +22,22 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - [x] Brief §1, §19, §20 updated with owner answers; architecture updated for $0 budget, Netlify, beta, founder pricing
 
 ### Step 2: Foundation
-- [ ] Next.js + TypeScript scaffold, Tailwind, lint
-- [ ] Brand configuration (name, logo, colors, domain, legal entity) from env
-- [ ] Drizzle schema for P1 tables (plus later-phase columns that avoid migrations), first migration
-- [ ] PGlite local database; `npm run dev` one-command setup; `.env.example`
-- [ ] Verify RLS + `SET ROLE` behavior on PGlite (ARCHITECTURE §4.1 note)
-- [ ] Better Auth: sign up, sign in, sessions
-- [ ] Organizations (4 kinds, can_post/can_provide), memberships with 5 roles incl. free crew_member/staff
-- [ ] Invitations: hashed token, 7-day expiry (config), single use, revoke, rate-limited
-- [ ] Request context + policy module + scoped repositories
-- [ ] RLS policies + `app_user` role
-- [ ] Tenant isolation tests (every role × every resource type)
-- [ ] Audit log (append-only) on material actions
-- [ ] Admin: building categories (with umbrella parent), job types, equipment, qualification types
-- [ ] `plans`, `subscriptions`, `app_config` seeded from config; beta subscriptions; entitlement service
-- [ ] Vitest + Playwright setup; `npm test` CI command
+- [x] Next.js 16 + TypeScript scaffold, Tailwind 4, ESLint
+- [x] Brand configuration (name, logo, colors, domain, legal entity) from env (`src/config/brand.ts`)
+- [x] Drizzle schema for all P1 tables (+ later-phase columns), migrations `0000_init` and `0001_rls`
+- [x] PGlite local database; `npm run dev` one-command setup (auto-migrates); `.env.example`
+- [x] RLS + `SET LOCAL ROLE app_user` verified on PGlite (cross-org writes rejected, reads filtered)
+- [x] Better Auth: email/password sign up, sign in, sign out, DB sessions, verification + reset emails, rate limits
+- [x] Organizations (4 kinds, can_post/can_provide), memberships with 5 roles incl. free crew_member/staff, permission overrides
+- [x] Invitations: hashed token, 7-day expiry (config), single use, email-bound, revoke, rate-limited
+- [x] Request context + role capabilities + tenant/system/admin transaction wrappers
+- [x] RLS policies for every P1 table + `app_user` role; auth/jobs/billing tables unreachable by app role
+- [x] Tenant isolation tests: 5 roles × 9 tables read, writes, updates, system tables, admin path
+- [x] Audit log (append-only for app role) on org create, membership changes, invitations, catalog changes
+- [x] Admin: building categories (umbrella parent), equipment and qualification types; job types are a fixed enum
+- [x] `plans`, `app_config`, catalog seeded from `config/defaults.json`; beta subscriptions per audience; entitlement service
+- [x] Vitest; `npm test` (CI: `npm run ci` = typecheck + lint + test)
+- [~] Playwright: config + onboarding/invitation spec written (mobile + desktop), **not yet run**: needs the Chromium download (`npx playwright install chromium`, ~150 MB), awaiting owner OK
 
 ### Step 3: Core marketplace vertical slice
 - [ ] **Public landing page** (marketing, signup paths for posters and providers), added by owner 2026-10-28
@@ -109,6 +113,10 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 | 2026-10-28 | Proposals = price + note + proposed availability | Owner (Q10). |
 | 2026-10-28 | Customer completion ack = typed name + timestamp | Owner (Q11). |
 | 2026-10-28 | Public landing page added to Phase 1 Step 3 | Owner. |
+| 2026-10-28 | Next.js 16 with Cache Components **off**, all pages dynamic | Nearly every page is per-user/per-org; avoids caching private data. |
+| 2026-10-28 | Private route/stop text in separate tables (`route_internal`, `route_private`, `stop_private`) | RLS works per row, so data with a different audience needs its own row. |
+| 2026-10-28 | Cross-party transitions (org creation, invitation accept, later award accept/cron) run on a trusted `withSystem` path with explicit checks + audit | RLS can't express "accepting provider may update poster's route" cleanly; app checks are primary, RLS is the backstop for everything else. |
+| 2026-10-28 | Email/password auth for Phase 1; magic-link sign-in deferred | Fewer moving parts; invitations already prove email ownership. Magic link can be added via Better Auth plugin without schema change. |
 | 2026-10-28 | Repo git author set to "SteelBuilt Systems" <sales@steelbuiltsystems.com> (repo-local only) | Commits were failing with no identity configured; owner can change it with `git config user.name`. |
 
 ## Open questions for the owner
@@ -121,7 +129,10 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 
 ## Known failures / limitations
 
-- None yet (no app code).
+- Playwright e2e not yet run (browser binary not downloaded).
+- `npm audit`: 4 moderate advisories in drizzle-kit's bundled esbuild (dev-only tool, affects its dev server, not the app). Fix requires a breaking drizzle-kit downgrade; revisit when drizzle-kit updates.
+- Admin "Add category" form keeps its values after saving (cosmetic).
+- Email verification is sent but not yet required to use the app.
 - Planned limitation: files already downloaded can't be recalled after an assignment is cancelled.
 - Planned limitation: no duplicate-listing detection across posters.
 - Free-tier constraints (ARCHITECTURE §7): Resend 100 emails/day; Netlify 300 credits/month (≈15 per production deploy); Neon cold start ~0.5–1 s after 5 min idle.
