@@ -581,6 +581,25 @@ export async function listPreferredProviders(ctx: RequestContext) {
   );
 }
 
+export async function searchProviderOrgs(ctx: RequestContext, q: string) {
+  requirePoster(ctx);
+  const term = q.trim();
+  if (term.length < 2) return [];
+  return withTenant(ctx, (tx) =>
+    tx
+      .select({ id: organizations.id, name: organizations.name, hqState: organizations.hqState })
+      .from(organizations)
+      .where(
+        and(
+          eq(organizations.canProvide, true),
+          eq(organizations.status, "active"),
+          sql`${organizations.name} ilike ${`%${term.replace(/[%_\\]/g, (c) => `\\${c}`)}%`}`,
+        ),
+      )
+      .limit(20),
+  );
+}
+
 export async function addPreferredProvider(ctx: RequestContext, providerOrgId: string, note?: string) {
   requirePoster(ctx);
   return withTenant(ctx, async (tx) => {

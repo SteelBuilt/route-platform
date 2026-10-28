@@ -11,6 +11,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const ctx = await requireOrgSession("/app");
   const orgs = await listMyOrgs(ctx);
   const canManage = ctx.capabilities.has("org.manage");
+  const links: [string, string][] = [["/app", "Dashboard"]];
+  if (ctx.org.canPost && ctx.capabilities.has("routes.post")) links.push(["/app/routes", "Routes"], ["/app/providers", "Providers"]);
+  if (ctx.org.canProvide && ctx.capabilities.has("marketplace.browse")) links.push(["/app/find", "Find work"], ["/app/work", "My work"]);
+  if (ctx.org.canProvide && canManage) links.push(["/app/profile", "Profile"]);
+  if (canManage) links.push(["/app/team", "Team"]);
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b-2 border-line bg-white">
@@ -20,14 +25,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </Link>
           <OrgSwitcher orgs={orgs} activeOrgId={ctx.orgId} />
           <nav className="ml-auto flex flex-wrap items-center gap-1 text-base">
-            <Link className="rounded-lg px-3 py-2 font-medium hover:bg-surface" href="/app">
-              Dashboard
-            </Link>
-            {canManage && (
-              <Link className="rounded-lg px-3 py-2 font-medium hover:bg-surface" href="/app/team">
-                Team
+            {links.map(([href, label]) => (
+              <Link key={href} className="rounded-lg px-3 py-2 font-medium hover:bg-surface" href={href}>
+                {label}
               </Link>
-            )}
+            ))}
             {ctx.isPlatformAdmin && (
               <Link className="rounded-lg px-3 py-2 font-medium hover:bg-surface" href="/admin/catalog">
                 Admin
@@ -39,6 +41,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
+      {ctx.org.isDemo && (
+        <div role="note" className="bg-amber-400 px-4 py-2 text-center font-semibold text-black">
+          Demo organization: all companies, routes and people here are sample data.
+        </div>
+      )}
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
         {!ctx.emailVerified && (ctx.org.canPost || ctx.capabilities.has("applications.submit")) && (
           <div className="mb-6">

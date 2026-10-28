@@ -40,8 +40,10 @@ async function createOrgAction(_: ActionState, form: FormData): Promise<ActionSt
   redirect("/app");
 }
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ as?: string }> }) {
   await requireSession("/onboarding");
+  const { as } = await searchParams;
+  const kinds = as === "provider" ? ORG_KINDS.filter((k) => k !== "poster") : ORG_KINDS;
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-10">
       <PageTitle sub="You can invite your team and crews next.">Set up your organization</PageTitle>
@@ -51,12 +53,19 @@ export default async function OnboardingPage() {
         </Field>
         <fieldset className="space-y-2">
           <legend className="mb-1 font-semibold">What does your company do?</legend>
-          {ORG_KINDS.map((k) => (
+          {kinds.map((k) => (
             <label
               key={k}
               className="flex min-h-14 cursor-pointer gap-3 rounded-lg border-2 border-line p-3 has-[:checked]:border-brand has-[:checked]:bg-surface"
             >
-              <input type="radio" name="kind" value={k} required className="mt-1 h-5 w-5 accent-[var(--brand)]" />
+              <input
+                type="radio"
+                name="kind"
+                value={k}
+                required
+                defaultChecked={as === "poster" && k === "poster"}
+                className="mt-1 h-5 w-5 accent-[var(--brand)]"
+              />
               <span>
                 <span className="block font-semibold">{KIND_OPTIONS[k].title}</span>
                 <span className="block text-sm text-muted">{KIND_OPTIONS[k].body}</span>

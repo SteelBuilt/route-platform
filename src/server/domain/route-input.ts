@@ -4,7 +4,9 @@ import { z } from "zod";
 import { isValidTimeZone } from "@/lib/time";
 import { JOB_TYPES, SERVICES, VISIBILITIES } from "../db/schema";
 
-const opt = <T extends z.ZodTypeAny>(s: T) => s.optional().nullable();
+// Form fields arrive as "" when left blank; treat that as "not provided".
+const opt = <T extends z.ZodTypeAny>(s: T) =>
+  z.preprocess((v) => (v === "" ? null : v), s.optional().nullable()) as unknown as z.ZodOptional<z.ZodNullable<T>>;
 const text = (max = 2000) => opt(z.string().trim().max(max)).transform((v) => (v ? v : null));
 const localDateTime = opt(
   z
