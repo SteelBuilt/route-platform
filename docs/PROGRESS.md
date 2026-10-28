@@ -4,14 +4,13 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 
 ## Current state
 
-- **Phase 1, Step 1 complete and approved** (2026-10-28).
-- **Phase 1, Step 2 (foundation) done** on branch `phase-1`, except the Playwright browser run (see below).
-- **Tests (2026-10-28):** `npm test`: 122 passed, 0 failed (6 files). Typecheck, lint and `next build` clean.
-- **Browser-verified (mobile 375×812, local dev):** sign up → create org → invite crew member → dev outbox link → invitee sign-up → accept → crew member sees limited dashboard, is redirected away from Team, gets 404 on admin; platform admin sees catalog and adds a category.
-- **Step 3 (2026-10-28), partly done (session hit its usage limit):** domain, API, UI, demo seed and tests are built and committed. `npm test`: 155 passed / 0 failed. Typecheck and lint clean. Playwright onboarding spec: 2/2 passed (mobile + desktop).
-- **Not yet done in Step 3:** mobile browser walkthrough of the marketplace screens (post → apply → award → accept), a Playwright marketplace spec, and a production build of the new screens. Only the landing/onboarding screens were viewed at phone width this session.
-- **Onboarding sectors (2026-10-28):** done. `npm test` 177 passed / 0 failed; Playwright 6 passed (mobile + desktop), including all four sectors, role reset on sector change, and saved sector/role.
-- **GitHub:** waiting on the owner to create the private repo (steps given in chat), then push.
+- **Phase 1 complete (2026-10-28)** on branch `phase-1`. Waiting for owner review before Phase 2.
+- **Final checks:** `npm test` 187 passed / 0 failed (12 files). `npm run test:e2e` 8 passed / 0 failed (4 specs × mobile + desktop). Typecheck, lint and `next build` clean.
+- **Browser-verified:**
+  - Playwright, both viewports: sign up, email confirmation via outbox, onboarding with primary sector, invite and accept crew member, post route, publish, find (sector default filter), apply, award, accept, released addresses.
+  - Manual at 375×812: landing, onboarding, team, admin catalog, routes list, poster route page with applicant comparison and award controls, route editor, find work.
+- **Not clicked in a browser** (covered by integration tests only): duplicate, save as template, file upload/download links, version history panel, withdraw, decline, revoke, preferred-provider page, profile edit page.
+- **GitHub:** waiting on the owner to create the private repo, then push.
 
 ## Phase 1: Assessment, foundation, core marketplace
 
@@ -45,24 +44,24 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - [x] Add-type forms reset after saving
 
 ### Step 3: Core marketplace vertical slice
-- [ ] **Public landing page** (marketing, signup paths for posters and providers), added by owner 2026-10-28
-- [ ] Route create/edit as draft, publish, duplicate, templates
-- [ ] Ordered stops with per-stop details; pickup window rules by job type
-- [ ] Compensation mode and basis; proposals = price + note + availability; requirements; visibility (marketplace / preferred / invitation)
-- [ ] Deadlines and expiration; internal vs provider-visible vs assignment notes
-- [ ] Route version history for material changes
-- [ ] Basic provider profile (regions, systems, services, crew size)
-- [ ] Discovery list with filters (category, job type, state/ZIP/distance, dates, compensation, single vs multi-stop); pickup shows city/state only, stops 5-digit ZIP
-- [ ] Apply / express interest (no lock), withdraw; unpaid providers can apply/accept on invited routes
-- [ ] Applicant comparison, award with acceptance deadline (24 h config), revoke
-- [ ] Accept assignment, transaction-safe (no double award, no double accept)
-- [ ] Privacy release enforced in API, file access, notifications
-- [ ] Private file storage: local adapter + R2 adapter, expiring links, type/size validation
-- [ ] Demo seed data (labeled, `is_demo`, separate command)
+- [x] Public landing page with poster and provider sign-up paths
+- [x] Route create/edit as draft, publish, duplicate, templates
+- [x] Ordered stops with per-stop details; pickup window required for delivery, not installation-only
+- [x] Compensation mode and basis; proposals = price + note + availability; requirements; visibility (marketplace / preferred / invitation)
+- [x] Deadlines and expiration; internal vs applicant-visible vs assignment-only notes
+- [x] Route version history (material vs minor changes)
+- [x] Basic provider profile (regions, building systems, services, crew size, equipment), all labeled self-reported
+- [x] Discovery list with filters (category incl. umbrella, job type, state, ZIP distance, dates, pay, single vs multi-stop, invited-only, my building systems); pickup city/state only, stops 5-digit ZIP
+- [x] Apply / express interest (no lock), withdraw; unpaid providers can apply/accept invited routes
+- [x] Applicant comparison, award with acceptance deadline (24 h default), revoke, decline, expiry
+- [x] Accept assignment, transaction-safe (row locks + unique index + idempotency key; concurrent accept test)
+- [x] Privacy release enforced in API, RLS and file links (notifications don't exist until Phase 2)
+- [x] Private file storage: local adapter + R2 adapter (R2 untested without credentials), 15-min links, content-sniffed type, size limits
+- [x] Demo seed data (`npm run seed:demo`, labeled, refuses non-demo databases)
+- [x] Primary sector at onboarding (default only), Cold Formed Steel category, Tube Steel installers
 - [x] Tests: acceptance 1 (minus subscription), 2, 3, 4, 5, 6, 15 (15 through real HTTP handlers + session cookies, every role, 2 outsider orgs)
-- [ ] Mobile-viewport browser verification of marketplace screens (NOT DONE)
-- [ ] Playwright marketplace spec; `next build` with new screens (NOT DONE)
-(Other Step 3 items above: code complete and covered by integration tests, but the UI is not browser-verified yet, so they stay unchecked.)
+- [x] Mobile-viewport browser verification (Playwright + manual; see "Not clicked" above)
+- [x] Playwright marketplace spec; `next build`
 
 ## Phase 2: Execution and communication (outline)
 - [ ] Crews, vehicles, crew assignment, conflict warnings (test 13)
@@ -125,6 +124,8 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 | 2026-10-28 | Cross-party transitions (org creation, invitation accept, later award accept/cron) run on a trusted `withSystem` path with explicit checks + audit | RLS can't express "accepting provider may update poster's route" cleanly; app checks are primary, RLS is the backstop for everything else. |
 | 2026-10-28 | Email/password auth for Phase 1; magic-link sign-in deferred | Fewer moving parts; invitations already prove email ownership. Magic link can be added via Better Auth plugin without schema change. |
 | 2026-10-28 | Onboarding asks for an **industry sector** (Red Iron, Cold Formed Steel, Tube Steel, Portable Sheds) before the company role; roles are limited per sector (`src/lib/sectors.ts`), enforced in `createOrganization` and by a DB check constraint. Existing orgs keep a null sector. | Owner request. |
+| 2026-10-28 | Primary sector is a default only (preselects route category; default discovery filter, clearable). Matching uses profile building systems: "Only my building systems" filter, "Not in your listed systems" badges, applicant comparison flag. Never blocks posting or applying. Cold Formed Steel added under Metal buildings. Tube Steel allows "Installation company or independent crew". | Owner answers. |
+| 2026-10-28 | Status-changing actions redirect with a `done` message | The submitting form disappears after publish/award/apply/accept, so its own message was lost (found by the e2e test). |
 | 2026-10-28 | Repo git author set to "SteelBuilt Systems" <sales@steelbuiltsystems.com> (repo-local only) | Commits were failing with no identity configured; owner can change it with `git config user.name`. |
 
 ## Open questions for the owner
@@ -135,8 +136,9 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 4. Founder discount percent and the deadline to convert (config placeholders until set).
 5. Netlify's free tier can pause the site when the monthly credits run out, and its terms allow removing free projects without notice. Are you OK with that risk for the beta, given the ~$19/month upgrade path?
 
-6. Industry sector is saved on the org but doesn't yet filter anything else. The building-category catalog has no "Cold Formed Steel" category. Should it be added, and should sector default the route categories / discovery filters?
-7. Tube Steel only allows "Delivery and installation provider" for crews, so a tube-steel installer who doesn't deliver must pick Red Iron or Cold Formed Steel. Intended?
+6. Should applying to a marketplace route require the route's building type to be in the provider's profile, or stay a visible warning (current behavior)?
+7. May I download the Census ZIP centroid file (public domain, ~1 MB) so distance search works for every US ZIP?
+8. Existing orgs created before onboarding asked for a primary sector have none. Add a way to set it on the company profile/settings page?
 
 ## Known failures / limitations
 

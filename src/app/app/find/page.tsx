@@ -175,7 +175,8 @@ export default async function FindPage({ searchParams }: { searchParams: Promise
                       <p className="text-lg font-semibold">{r.title}</p>
                       <p className="text-sm text-muted">
                         {r.posterName}
-                        {r.posterIsDemo ? " (demo)" : ""} · {r.categoryName} · {JOB_TYPE_LABEL[r.jobType]}
+                        {r.posterIsDemo && !/\(demo\)/i.test(r.posterName) ? " (demo)" : ""} · {r.categoryName} ·{" "}
+                        {JOB_TYPE_LABEL[r.jobType]}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
