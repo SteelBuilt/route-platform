@@ -1,0 +1,54 @@
+{
+  "$comment": "Default configuration loaded into the database by `npm run db:seed-base`. These are starting values only: the live values are the rows in the plans, app_config and catalog tables, which admins can change. Existing rows are never overwritten.",
+  "app_config": {
+    "billing.enabled": false,
+    "billing.stripe_mode": "test",
+    "beta.enabled": true,
+    "beta.length_days": 90,
+    "beta.started_at": null,
+    "founder.discount_percent": null,
+    "founder.offer_ends_at": null,
+    "award.accept_hours": 24,
+    "billing.grace_days": 7,
+    "invitation.ttl_days": 7,
+    "customer_link.ttl_days": 14,
+    "file_link.ttl_minutes": 15,
+    "upload.max_image_mb": 15,
+    "upload.max_pdf_mb": 25,
+    "rate_limit.invitations_per_hour": 30,
+    "rate_limit.invitation_accept_per_hour": 20
+  },
+  "plans": [
+    { "code": "provider_monthly", "audience": "provider", "name": "Provider (monthly)", "base_price_cents": 1500, "included_leader_seats": 3, "extra_seat_price_cents": 500, "interval": "month", "trial_days": 30 },
+    { "code": "provider_annual", "audience": "provider", "name": "Provider (annual)", "base_price_cents": 15000, "included_leader_seats": 3, "extra_seat_price_cents": 5000, "interval": "year", "trial_days": 30 },
+    { "code": "poster_monthly", "audience": "poster", "name": "Posting company (monthly)", "base_price_cents": 10000, "included_leader_seats": null, "extra_seat_price_cents": null, "interval": "month", "trial_days": 14 },
+    { "code": "poster_annual", "audience": "poster", "name": "Posting company (annual)", "base_price_cents": 100000, "included_leader_seats": null, "extra_seat_price_cents": null, "interval": "year", "trial_days": 14 }
+  ],
+  "building_categories": [
+    { "slug": "portable-buildings", "name": "Portable buildings and sheds", "allowed_job_types": ["delivery"], "default_job_type": "delivery", "sort": 10 },
+    { "slug": "metal-buildings", "name": "Metal buildings", "is_umbrella": true, "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 20 },
+    { "slug": "tube-steel", "name": "Tube-steel metal buildings", "parent": "metal-buildings", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 21 },
+    { "slug": "red-iron", "name": "Red-iron / rigid-frame steel buildings", "parent": "metal-buildings", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 22 },
+    { "slug": "other-systems", "name": "Other building systems", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery", "sort": 90 }
+  ],
+  "equipment_types": [
+    { "slug": "rollback", "name": "Rollback / tilt-bed truck" },
+    { "slug": "shed-mule", "name": "Shed mover / mule" },
+    { "slug": "flatbed-trailer", "name": "Flatbed trailer" },
+    { "slug": "gooseneck-trailer", "name": "Gooseneck trailer" },
+    { "slug": "forklift", "name": "Forklift / telehandler" },
+    { "slug": "crane", "name": "Crane" },
+    { "slug": "scissor-lift", "name": "Scissor or boom lift" },
+    { "slug": "welder", "name": "Welder" },
+    { "slug": "anchoring-tools", "name": "Anchoring equipment" }
+  ],
+  "qualification_types": [
+    { "slug": "general-liability", "name": "General liability insurance", "requires_document": true, "document_kind": "insurance_certificate" },
+    { "slug": "auto-liability", "name": "Commercial auto insurance", "requires_document": true, "document_kind": "insurance_certificate" },
+    { "slug": "cargo", "name": "Cargo insurance", "requires_document": true, "document_kind": "insurance_certificate" },
+    { "slug": "workers-comp", "name": "Workers' compensation", "requires_document": true, "document_kind": "insurance_certificate" },
+    { "slug": "usdot", "name": "USDOT number", "requires_document": false },
+    { "slug": "cdl", "name": "CDL driver available", "requires_document": false },
+    { "slug": "red-iron-experience", "name": "Red-iron erection experience", "requires_document": false }
+  ]
+}

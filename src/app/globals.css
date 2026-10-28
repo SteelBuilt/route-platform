@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/* High-contrast, field-readable defaults. Brand color comes from config
+   (src/config/brand.ts) and is set on <html> as --brand. */
+:root {
+  --brand: #1d4ed8;
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --line: #cbd5e1;
+  --surface: #f8fafc;
+  --danger: #b91c1c;
+  --ok: #15803d;
+}
+
+@theme inline {
+  --color-brand: var(--brand);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
