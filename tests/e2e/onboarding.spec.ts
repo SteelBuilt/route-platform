@@ -15,6 +15,7 @@ test("owner invites a crew member who joins with limited access", async ({ page,
 
   await expect(page).toHaveURL(/\/onboarding/);
   await page.getByLabel("Company name").fill(`E2E Dealer ${stamp}`);
+  await page.getByLabel("Red Iron").check();
   await page.getByText("Manufacturer, supplier or dealer").click();
   await page.getByRole("button", { name: "Create organization" }).click();
   await expect(page.getByRole("heading", { name: `E2E Dealer ${stamp}` })).toBeVisible();

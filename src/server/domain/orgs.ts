@@ -21,10 +21,13 @@ import {
 } from "../db/schema";
 import { Conflict, Forbidden, Invalid, NotFound } from "../errors";
 import { withSystem, withTenant } from "../tenant";
+import { INDUSTRY_SECTORS, isValidSectorRole } from "@/lib/sectors";
 
-export const createOrgInput = z.object({
+export const createOrgInput = z
+  .object({
   name: z.string().trim().min(2).max(120),
-  kind: z.enum(ORG_KINDS),
+  industrySector: z.enum(INDUSTRY_SECTORS, { message: "Choose your industry sector" }),
+  kind: z.enum(ORG_KINDS, { message: "Choose what your company does" }),
   hqState: z
     .string()
     .trim()
@@ -37,7 +40,11 @@ export const createOrgInput = z.object({
     .regex(/^\d{5}$/)
     .optional(),
   timezone: z.string().default("America/Chicago"),
-});
+  })
+  .refine((d) => isValidSectorRole(d.industrySector, d.kind), {
+    message: "That company type isn't available for the selected industry sector",
+    path: ["kind"],
+  });
 
 export function capabilitiesForKind(kind: OrgKind) {
   return { canPost: kind === "poster", canProvide: kind !== "poster" };
@@ -60,7 +67,9 @@ export async function createOrganization(
   input: z.input<typeof createOrgInput>,
   opts: { isDemo?: boolean; now?: Date } = {},
 ) {
-  const data = createOrgInput.parse(input);
+  const parsed = createOrgInput.safeParse(input);
+  if (!parsed.success) throw new Invalid(parsed.error.issues[0].message);
+  const data = parsed.data;
   const now = opts.now ?? new Date();
   const caps = capabilitiesForKind(data.kind);
   return withSystem(async (tx) => {
@@ -70,6 +79,7 @@ export async function createOrganization(
         name: data.name,
         slug: slugify(data.name),
         kind: data.kind,
+        industrySector: data.industrySector,
         canPost: caps.canPost,
         canProvide: caps.canProvide,
         hqState: data.hqState,
@@ -105,7 +115,7 @@ export async function createOrganization(
       targetType: "organization",
       targetId: org.id,
       orgIds: [org.id],
-      metadata: { createdBy: userId, kind: org.kind },
+      metadata: { createdBy: userId, kind: org.kind, industrySector: org.industrySector },
     });
     return { org, membership: m };
   });

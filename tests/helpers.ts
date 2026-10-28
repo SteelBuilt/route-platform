@@ -39,7 +39,7 @@ export async function makeUser(opts: { email?: string; name?: string; platformAd
 
 export async function makeOrg(kind: OrgKind, name = `${kind} org ${++n}`) {
   const owner = await makeUser();
-  const { org } = await createOrganization(owner.id, { name, kind });
+  const { org } = await createOrganization(owner.id, { industrySector: "red_iron", name, kind });
   return { org, owner, ctx: await buildContext(owner.id, org.id) };
 }
 

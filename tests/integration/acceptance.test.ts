@@ -45,7 +45,7 @@ beforeAll(async () => {
 describe("1. posting company signs up, creates a route and publishes it", () => {
   it("works end to end (subscription checkout is Phase 3; beta plan applies)", async () => {
     const uid = await signUp("dispatch@dealer.test", "Dana Dispatch");
-    const { org } = await createOrganization(uid, { name: "East Texas Buildings", kind: "poster", hqState: "TX" });
+    const { org } = await createOrganization(uid, { industrySector: "red_iron", name: "East Texas Buildings", kind: "poster", hqState: "TX" });
     poster = await buildContext(uid, org.id);
     routeId = await createDraft(poster, await routeFixture());
     await publishRoute(poster, routeId);
@@ -65,7 +65,7 @@ describe("1. posting company signs up, creates a route and publishes it", () => 
 
   it("an unverified user can draft but not publish", async () => {
     const uid = await signUp("new@dealer.test", "New Person", false);
-    const { org } = await createOrganization(uid, { name: "Unverified Dealer", kind: "poster" });
+    const { org } = await createOrganization(uid, { industrySector: "red_iron", name: "Unverified Dealer", kind: "poster" });
     const ctx = await buildContext(uid, org.id);
     const id = await createDraft(ctx, await routeFixture());
     await expect(publishRoute(ctx, id)).rejects.toMatchObject({ code: "email_not_verified" });
@@ -100,7 +100,7 @@ describe("1. posting company signs up, creates a route and publishes it", () => 
 describe("2. provider signs up, completes a profile, and applies", () => {
   it("works end to end", async () => {
     const uidA = await signUp("owner@crewa.test", "Alex Erector");
-    const { org: a } = await createOrganization(uidA, { name: "Piney Woods Erectors", kind: "delivery_installer" });
+    const { org: a } = await createOrganization(uidA, { industrySector: "red_iron", name: "Piney Woods Erectors", kind: "delivery_installer" });
     providerA = await buildContext(uidA, a.id);
     await saveProviderProfile(providerA, {
       summary: "Red iron and tube steel crews out of Longview.",
@@ -123,7 +123,7 @@ describe("2. provider signs up, completes a profile, and applies", () => {
 
     // Applying doesn't lock the route: it stays published and others can apply.
     const uidB = await signUp("owner@crewb.test", "Blake Builder");
-    const { org: b } = await createOrganization(uidB, { name: "Lone Star Steel Crew", kind: "installer" });
+    const { org: b } = await createOrganization(uidB, { industrySector: "red_iron", name: "Lone Star Steel Crew", kind: "installer" });
     providerB = await buildContext(uidB, b.id);
     appB = (await applyToRoute(providerB, routeId, { message: "Available." })).id;
     const [r] = await getDb().select().from(routes).where(eq(routes.id, routeId));
@@ -248,7 +248,7 @@ describe("6. an unauthorized account cannot retrieve private addresses or docume
     const crewMember = await addMember(providerA.orgId!, "crew_member");
     const staff = await addMember(providerA.orgId!, "staff");
     const uid = await signUp("other@dealer2.test", "Other Poster");
-    const { org } = await createOrganization(uid, { name: "Some Other Dealer", kind: "poster" });
+    const { org } = await createOrganization(uid, { industrySector: "red_iron", name: "Some Other Dealer", kind: "poster" });
     const otherPoster = await buildContext(uid, org.id);
 
     const b = await getRouteForProvider(providerB, routeId);

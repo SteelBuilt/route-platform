@@ -51,7 +51,7 @@ beforeAll(async () => {
   await freshDb();
   await loadTestCentroids();
   const owner = await account(null, null);
-  const { org } = await createOrganization(owner.userId, { name: "Target Dealer", kind: "poster" });
+  const { org } = await createOrganization(owner.userId, { industrySector: "red_iron", name: "Target Dealer", kind: "poster" });
   poster = await buildContext(owner.userId, org.id);
   draftRouteId = await createDraft(poster, await routeFixture({ title: "Draft route" }));
   publishedRouteId = await createDraft(poster, await routeFixture({ title: "Published route" }));
@@ -76,7 +76,7 @@ beforeAll(async () => {
   // Every role in another poster org and in a provider org.
   for (const kind of ["poster", "delivery_installer"] as const) {
     const o = await account(null, null);
-    const { org: other } = await createOrganization(o.userId, { name: `Other ${kind}`, kind });
+    const { org: other } = await createOrganization(o.userId, { industrySector: "red_iron", name: `Other ${kind}`, kind });
     for (const role of ROLES) {
       const acct = role === "owner" ? { ...o } : await account(other.id, role);
       outsiders.push({

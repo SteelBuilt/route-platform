@@ -10,6 +10,7 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - **Browser-verified (mobile 375×812, local dev):** sign up → create org → invite crew member → dev outbox link → invitee sign-up → accept → crew member sees limited dashboard, is redirected away from Team, gets 404 on admin; platform admin sees catalog and adds a category.
 - **Step 3 (2026-10-28), partly done (session hit its usage limit):** domain, API, UI, demo seed and tests are built and committed. `npm test`: 155 passed / 0 failed. Typecheck and lint clean. Playwright onboarding spec: 2/2 passed (mobile + desktop).
 - **Not yet done in Step 3:** mobile browser walkthrough of the marketplace screens (post → apply → award → accept), a Playwright marketplace spec, and a production build of the new screens. Only the landing/onboarding screens were viewed at phone width this session.
+- **Onboarding sectors (2026-10-28):** done. `npm test` 177 passed / 0 failed; Playwright 6 passed (mobile + desktop), including all four sectors, role reset on sector change, and saved sector/role.
 - **GitHub:** waiting on the owner to create the private repo (steps given in chat), then push.
 
 ## Phase 1: Assessment, foundation, core marketplace
@@ -123,6 +124,7 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 | 2026-10-28 | Private route/stop text in separate tables (`route_internal`, `route_private`, `stop_private`) | RLS works per row, so data with a different audience needs its own row. |
 | 2026-10-28 | Cross-party transitions (org creation, invitation accept, later award accept/cron) run on a trusted `withSystem` path with explicit checks + audit | RLS can't express "accepting provider may update poster's route" cleanly; app checks are primary, RLS is the backstop for everything else. |
 | 2026-10-28 | Email/password auth for Phase 1; magic-link sign-in deferred | Fewer moving parts; invitations already prove email ownership. Magic link can be added via Better Auth plugin without schema change. |
+| 2026-10-28 | Onboarding asks for an **industry sector** (Red Iron, Cold Formed Steel, Tube Steel, Portable Sheds) before the company role; roles are limited per sector (`src/lib/sectors.ts`), enforced in `createOrganization` and by a DB check constraint. Existing orgs keep a null sector. | Owner request. |
 | 2026-10-28 | Repo git author set to "SteelBuilt Systems" <sales@steelbuiltsystems.com> (repo-local only) | Commits were failing with no identity configured; owner can change it with `git config user.name`. |
 
 ## Open questions for the owner
@@ -132,6 +134,9 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 3. Legal entity name to show in the footer and policy drafts (e.g. "SteelBuilt Systems, LLC"?).
 4. Founder discount percent and the deadline to convert (config placeholders until set).
 5. Netlify's free tier can pause the site when the monthly credits run out, and its terms allow removing free projects without notice. Are you OK with that risk for the beta, given the ~$19/month upgrade path?
+
+6. Industry sector is saved on the org but doesn't yet filter anything else. The building-category catalog has no "Cold Formed Steel" category. Should it be added, and should sector default the route categories / discovery filters?
+7. Tube Steel only allows "Delivery and installation provider" for crews, so a tube-steel installer who doesn't deliver must pick Red Iron or Cold Formed Steel. Intended?
 
 ## Known failures / limitations
 

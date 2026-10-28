@@ -78,7 +78,7 @@ describe("organizations", () => {
     ["delivery_installer", false, true, ["provider"]],
   ] as const)("%s orgs: canPost=%s canProvide=%s, subscriptions %j", async (kind, canPost, canProvide, audiences) => {
     const u = await makeUser();
-    const { org } = await createOrganization(u.id, { name: `${kind} co`, kind });
+    const { org } = await createOrganization(u.id, { industrySector: "red_iron", name: `${kind} co`, kind });
     expect(org).toMatchObject({ canPost, canProvide });
     const subs = await getDb().select().from(subscriptions).where(eq(subscriptions.orgId, org.id));
     expect(subs.map((s) => s.audience).sort()).toEqual([...audiences]);

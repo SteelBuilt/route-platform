@@ -16,6 +16,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { INDUSTRY_SECTORS } from "../../lib/sectors";
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
 const createdAt = () => ts("created_at").notNull().defaultNow();
@@ -192,6 +193,8 @@ export const organizations = pgTable("organizations", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   kind: text("kind", { enum: ORG_KINDS }).notNull(),
+  // Chosen at onboarding. Null for organizations created before sectors existed.
+  industrySector: text("industry_sector", { enum: INDUSTRY_SECTORS }),
   canPost: boolean("can_post").notNull().default(false),
   canProvide: boolean("can_provide").notNull().default(false),
   phone: text("phone"),
@@ -207,7 +210,16 @@ export const organizations = pgTable("organizations", {
   isDemo: boolean("is_demo").notNull().default(false),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
-});
+}, (t) => [
+  // Mirrors SECTOR_ROLES in src/lib/sectors.ts. Null sector = pre-sector org.
+  check(
+    "organizations_sector_role",
+    sql`${t.industrySector} IS NULL
+      OR ${t.industrySector} IN ('red_iron', 'cold_formed_steel')
+      OR (${t.industrySector} = 'tube_steel' AND ${t.kind} IN ('poster', 'delivery_installer'))
+      OR (${t.industrySector} = 'portable_sheds' AND ${t.kind} IN ('poster', 'transporter'))`,
+  ),
+]);
 
 export const memberships = pgTable(
   "memberships",

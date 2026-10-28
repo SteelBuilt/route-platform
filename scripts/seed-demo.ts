@@ -82,17 +82,17 @@ async function main() {
 
   const { org: poster } = await createOrganization(
     posterUid,
-    { name: "Piney Woods Buildings (Demo)", kind: "poster", hqState: "TX", hqZip: "75701" },
+    { industrySector: "red_iron", name: "Piney Woods Buildings (Demo)", kind: "poster", hqState: "TX", hqZip: "75701" },
     { isDemo: true },
   );
   const { org: crews } = await createOrganization(
     crewsUid,
-    { name: "East Texas Haul & Erect (Demo)", kind: "delivery_installer", hqState: "TX", hqZip: "75601" },
+    { industrySector: "red_iron", name: "East Texas Haul & Erect (Demo)", kind: "delivery_installer", hqState: "TX", hqZip: "75601" },
     { isDemo: true },
   );
   const { org: install } = await createOrganization(
     installUid,
-    { name: "Brazos Steel Crew (Demo)", kind: "installer", hqState: "TX", hqZip: "76701" },
+    { industrySector: "red_iron", name: "Brazos Steel Crew (Demo)", kind: "installer", hqState: "TX", hqZip: "76701" },
     { isDemo: true },
   );
 
