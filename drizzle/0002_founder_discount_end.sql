@@ -1,0 +1,1 @@
+ALTER TABLE "subscriptions" ADD COLUMN "founder_discount_ends_at" timestamp with time zone;

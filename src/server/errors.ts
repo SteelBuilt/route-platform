@@ -46,6 +46,12 @@ export class RateLimited extends AppError {
   }
 }
 
+export class EmailNotVerified extends AppError {
+  constructor() {
+    super("Confirm your email address first. Check your inbox for the confirmation link.", 403, "email_not_verified");
+  }
+}
+
 export class NotEntitled extends AppError {
   constructor(message: string) {
     super(message, 402, "not_entitled");

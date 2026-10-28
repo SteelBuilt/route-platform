@@ -151,7 +151,7 @@ export default async function CatalogAdmin() {
       </div>
       <Card className="mt-4">
         <h3 className="mb-3 text-lg font-bold">Add a category</h3>
-        <ActionForm action={saveCategory.bind(null, undefined)} submitLabel="Add category">
+        <ActionForm action={saveCategory.bind(null, undefined)} submitLabel="Add category" resetOnSuccess>
           <CategoryFields parents={umbrellas} />
         </ActionForm>
       </Card>
@@ -165,7 +165,7 @@ export default async function CatalogAdmin() {
             ))}
           </ul>
           <Card>
-            <ActionForm action={addEquipment} submitLabel="Add equipment type">
+            <ActionForm action={addEquipment} submitLabel="Add equipment type" resetOnSuccess>
               <Field label="Name">
                 <Input name="name" required />
               </Field>

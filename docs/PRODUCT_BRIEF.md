@@ -395,7 +395,8 @@ Do not call the app production-ready merely because it compiles. State precisely
 *Added 2026-10-28 by owner:*
 
 - **Launch as a 90-day free beta** for posters and providers, no card required. Billing is built fully but disabled behind a config flag. Stripe stays in test mode until the owner approves live billing.
-- **Founder pricing:** beta users who convert get a configurable discount, locked in for as long as they stay subscribed.
+- **Founder pricing:** beta orgs that add a card before the beta ends, or within 30 days after, get **40% off for 12 months**: provider $9/month (normally $15), poster $60/month (normally $100). Percentage, duration and window are configuration. *(Updated 2026-10-28.)*
+- **Email verification:** a user must verify their email before their org can post or apply to routes.
 - **Invited work is free for providers:** an unpaid provider org can accept and complete routes from posters that invited it (invitation-only or preferred visibility). A paid provider plan is needed only to browse the marketplace and apply to uninvited routes.
 - **Dealers with in-house crews:** the poster plan includes managing in-house crews. A dealer that also applies to other posters' routes adds a provider plan.
 - **Seats:** owner, dispatcher and crew leader are paid leader seats. Crew members and limited staff are free.
@@ -411,7 +412,9 @@ Do not call the app production-ready merely because it compiles. State precisely
 - Launch seeding region: Texas first, then the other six states. Discovery works nationwide.
 - The owner is not a full-time developer. Favor managed services and low operational overhead over flexibility. Avoid self-managed servers, queues, or containers unless there is no managed alternative.
 - Monthly infrastructure budget for launch: **$0/month. Free tiers only.** Hosting must be a free tier whose terms allow commercial use.
-- Accounts: SBS's existing Stripe account, with separate RouteYard products and prices. Domain: steelbuiltsystems.com. Other accounts (email provider, GitHub, hosting, database, storage, monitoring, maps) to be confirmed.
+- Accounts: SBS's existing Stripe account, with separate RouteYard products and prices. Domain: steelbuiltsystems.com. GitHub: a free private repository (Phase 1). Netlify, Neon, Cloudflare, Resend, Sentry and Mapbox are created in Phase 4.
+- Legal entity: **SteelBuilt Systems LLC**. Logo: plain text until SBS provides a logo and colors (both in brand configuration).
+- Hosting: Netlify Free is accepted for the beta. **Before the first paying customer, flag the move to a paid hosting plan for owner approval.**
 - Product name: **RouteYard by SBS**. Production host: **routeyard.steelbuiltsystems.com**.
 
 *(Section updated 2026-10-28 by owner.)*

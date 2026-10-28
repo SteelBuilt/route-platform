@@ -10,7 +10,7 @@ function read(name: string, fallback: string): string {
 export const brand = {
   productName: read("NEXT_PUBLIC_BRAND_PRODUCT_NAME", "RouteYard by SBS"),
   shortName: read("NEXT_PUBLIC_BRAND_SHORT_NAME", "RouteYard"),
-  legalEntity: read("NEXT_PUBLIC_BRAND_LEGAL_ENTITY", "SteelBuilt Systems"),
+  legalEntity: read("NEXT_PUBLIC_BRAND_LEGAL_ENTITY", "SteelBuilt Systems LLC"),
   logoUrl: read("NEXT_PUBLIC_BRAND_LOGO_URL", ""),
   primaryColor: read("NEXT_PUBLIC_BRAND_PRIMARY_COLOR", "#1d4ed8"),
   supportEmail: read("NEXT_PUBLIC_BRAND_SUPPORT_EMAIL", "support@localhost"),

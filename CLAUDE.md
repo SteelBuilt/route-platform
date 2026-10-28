@@ -58,4 +58,5 @@ Next.js (App Router, TypeScript) on Netlify Free · Postgres (Neon Free in prod,
 - Tenant reads/writes go through `withTenant(ctx, tx => …)`. `withSystem` only for audited trusted paths; `withPlatformAdmin` for admin.
 - New tables: add RLS policies + grants in a custom migration, and add isolation tests.
 - Throw `AppError` subclasses (`NotFound` for cross-org, `Forbidden`, `Invalid`, `Conflict`); `runAction` maps them to form errors.
+- Windows: never rewrite source files with PowerShell `Get-Content`/`Set-Content` (it mangles UTF-8 and adds BOMs). Use the editor tools.
 - Tests assert DB errors with `expectDbError` (Drizzle wraps the Postgres message in `cause`).

@@ -861,6 +861,7 @@ export const subscriptions = pgTable(
     leaderSeatQuantity: integer("leader_seat_quantity"),
     founderEligible: boolean("founder_eligible").notNull().default(false),
     founderDiscountPercent: integer("founder_discount_percent"),
+    founderDiscountEndsAt: ts("founder_discount_ends_at"),
     stripeCouponId: text("stripe_coupon_id"),
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id").unique(),

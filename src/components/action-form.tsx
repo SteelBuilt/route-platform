@@ -2,7 +2,7 @@
 
 // A form bound to a server action that returns { error?, ok? }. Shows the
 // message and disables the submit button while pending.
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/server/session";
 import { Alert, Button } from "./ui";
@@ -12,6 +12,7 @@ export function ActionForm({
   submitLabel,
   pendingLabel,
   variant,
+  resetOnSuccess,
   children,
   className,
 }: {
@@ -19,12 +20,18 @@ export function ActionForm({
   submitLabel: string;
   pendingLabel?: string;
   variant?: "primary" | "secondary" | "danger";
+  // Clear the fields after a successful submit (for "add another" forms).
+  resetOnSuccess?: boolean;
   children?: ReactNode;
   className?: string;
 }) {
   const [state, formAction] = useActionState(action, undefined);
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (resetOnSuccess && state?.ok) formRef.current?.reset();
+  }, [state, resetOnSuccess]);
   return (
-    <form action={formAction} className={className ?? "space-y-4"}>
+    <form ref={formRef} action={formAction} className={className ?? "space-y-4"}>
       {state?.error && <Alert>{state.error}</Alert>}
       {state?.ok && <Alert kind="ok">{state.ok}</Alert>}
       {children}

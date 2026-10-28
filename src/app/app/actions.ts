@@ -5,8 +5,20 @@ import { redirect } from "next/navigation";
 import { ROLES, type Role } from "@/server/db/schema";
 import { createInvitation, revokeInvitation } from "@/server/domain/invitations";
 import { changeMemberRole, removeMember, setActiveOrg, setPermissionOverrides } from "@/server/domain/orgs";
+import { getAuth } from "@/server/auth";
 import { Invalid } from "@/server/errors";
+import { hit } from "@/server/ratelimit";
 import { requireOrgSession, requireSession, runAction, type ActionState } from "@/server/session";
+
+export async function resendVerificationAction(_: ActionState): Promise<ActionState> {
+  const ctx = await requireSession();
+  return runAction(async () => {
+    if (ctx.emailVerified) return "Your email is already confirmed.";
+    await hit(`verify-resend:${ctx.userId}`, 5, 3600);
+    await getAuth().api.sendVerificationEmail({ body: { email: ctx.email, callbackURL: "/app" } });
+    return `Confirmation email sent to ${ctx.email}.`;
+  });
+}
 
 export async function switchOrgAction(form: FormData) {
   const ctx = await requireSession();

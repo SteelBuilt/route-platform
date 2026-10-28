@@ -5,6 +5,7 @@ import { signOutAction } from "@/app/(auth)/actions";
 import { requireOrgSession } from "@/server/session";
 import { listMyOrgs } from "@/server/domain/orgs";
 import { OrgSwitcher } from "./org-switcher";
+import { VerifyEmailBanner } from "./verify-banner";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const ctx = await requireOrgSession("/app");
@@ -38,7 +39,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+        {!ctx.emailVerified && (ctx.org.canPost || ctx.capabilities.has("applications.submit")) && (
+          <div className="mb-6">
+            <VerifyEmailBanner email={ctx.email} />
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

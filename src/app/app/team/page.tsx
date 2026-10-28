@@ -113,7 +113,7 @@ export default async function TeamPage() {
         <aside className="space-y-6">
           <Card>
             <h2 className="mb-3 text-lg font-bold">Invite someone</h2>
-            <ActionForm action={inviteAction} submitLabel="Send invitation" pendingLabel="Sending…">
+            <ActionForm action={inviteAction} submitLabel="Send invitation" pendingLabel="Sending…" resetOnSuccess>
               <Field label="Email">
                 <Input name="email" type="email" required autoComplete="off" />
               </Field>

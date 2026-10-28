@@ -1,4 +1,4 @@
-﻿// Tenant isolation is enforced by the database (RLS), not just by app code.
+// Tenant isolation is enforced by the database (RLS), not just by app code.
 // These tests go straight at the tables through withTenant, for every role.
 import { eq, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";

@@ -2,13 +2,14 @@
 // the server; the active org is never taken from client input directly.
 import { and, asc, eq } from "drizzle-orm";
 import { capabilitiesFor, type Capability } from "./authz/roles";
-import { Forbidden, Unauthenticated } from "./errors";
+import { EmailNotVerified, Forbidden, Unauthenticated } from "./errors";
 import { getDb, type Executor } from "./db/client";
 import { memberships, organizations, sessions, users, type OrgKind, type Role } from "./db/schema";
 
 export type RequestContext = {
   userId: string;
   email: string;
+  emailVerified: boolean;
   name: string;
   isPlatformAdmin: boolean;
   orgId: string | null;
@@ -41,6 +42,7 @@ export async function buildContext(
   return {
     userId: user.id,
     email: user.email,
+    emailVerified: user.emailVerified,
     name: user.name,
     isPlatformAdmin: user.platformRole === "platform_admin",
     orgId: pick?.o.id ?? null,
@@ -75,6 +77,13 @@ export type OrgContext = RequestContext & {
 
 export function requireOrg(ctx: RequestContext): asserts ctx is OrgContext {
   if (!ctx.orgId || !ctx.role || !ctx.org) throw new Forbidden("Join or create an organization first");
+}
+
+// Posting and applying to routes require a verified email (owner decision 2026-10-28).
+export function requireVerifiedEmail(ctx: RequestContext) {
+  if (!ctx.emailVerified) {
+    throw new EmailNotVerified();
+  }
 }
 
 export function requireCapability(ctx: RequestContext, cap: Capability): asserts ctx is OrgContext {
