@@ -15,7 +15,15 @@ export type RequestContext = {
   orgId: string | null;
   membershipId: string | null;
   role: Role | null;
-  org: { id: string; name: string; kind: OrgKind; canPost: boolean; canProvide: boolean } | null;
+  org: {
+    id: string;
+    name: string;
+    kind: OrgKind;
+    canPost: boolean;
+    canProvide: boolean;
+    timezone: string;
+    isDemo: boolean;
+  } | null;
   capabilities: Set<Capability>;
   sessionId?: string;
 };
@@ -55,6 +63,8 @@ export async function buildContext(
           kind: pick.o.kind,
           canPost: pick.o.canPost,
           canProvide: pick.o.canProvide,
+          timezone: pick.o.timezone,
+          isDemo: pick.o.isDemo,
         }
       : null,
     capabilities: pick ? capabilitiesFor(pick.m.role, pick.m.permissionOverrides) : new Set(),

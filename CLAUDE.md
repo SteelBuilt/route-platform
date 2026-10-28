@@ -56,6 +56,7 @@ Next.js (App Router, TypeScript) on Netlify Free · Postgres (Neon Free in prod,
 - Next.js 16: read `node_modules/next/dist/docs/` before using unfamiliar APIs (see AGENTS.md). Cache Components is off.
 - Domain logic lives in `src/server/domain/*` and takes a `RequestContext`; pages and server actions stay thin.
 - Tenant reads/writes go through `withTenant(ctx, tx => …)`. `withSystem` only for audited trusted paths; `withPlatformAdmin` for admin.
+- Inside a transaction, pass `tx` to every helper (`checkEntitlement`, `getConfig`, …). Calling `getDb()` there deadlocks PGlite (single connection).
 - New tables: add RLS policies + grants in a custom migration, and add isolation tests.
 - Throw `AppError` subclasses (`NotFound` for cross-org, `Forbidden`, `Invalid`, `Conflict`); `runAction` maps them to form errors.
 - Windows: never rewrite source files with PowerShell `Get-Content`/`Set-Content` (it mangles UTF-8 and adds BOMs). Use the editor tools.

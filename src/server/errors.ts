@@ -54,6 +54,6 @@ export class EmailNotVerified extends AppError {
 
 export class NotEntitled extends AppError {
   constructor(message: string) {
-    super(message, 402, "not_entitled");
+    super(message, 403, "not_entitled");
   }
 }
