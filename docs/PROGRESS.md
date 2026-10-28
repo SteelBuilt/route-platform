@@ -8,7 +8,9 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - **Phase 1, Step 2 (foundation) done** on branch `phase-1`, except the Playwright browser run (see below).
 - **Tests (2026-10-28):** `npm test`: 122 passed, 0 failed (6 files). Typecheck, lint and `next build` clean.
 - **Browser-verified (mobile 375×812, local dev):** sign up → create org → invite crew member → dev outbox link → invitee sign-up → accept → crew member sees limited dashboard, is redirected away from Team, gets 404 on admin; platform admin sees catalog and adds a category.
-- **Next:** Step 3 (core marketplace slice + landing page).
+- **Step 3 (2026-10-28), partly done (session hit its usage limit):** domain, API, UI, demo seed and tests are built and committed. `npm test`: 155 passed / 0 failed. Typecheck and lint clean. Playwright onboarding spec: 2/2 passed (mobile + desktop).
+- **Not yet done in Step 3:** mobile browser walkthrough of the marketplace screens (post → apply → award → accept), a Playwright marketplace spec, and a production build of the new screens. Only the landing/onboarding screens were viewed at phone width this session.
+- **GitHub:** waiting on the owner to create the private repo (steps given in chat), then push.
 
 ## Phase 1: Assessment, foundation, core marketplace
 
@@ -37,7 +39,9 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - [x] Admin: building categories (umbrella parent), equipment and qualification types; job types are a fixed enum
 - [x] `plans`, `app_config`, catalog seeded from `config/defaults.json`; beta subscriptions per audience; entitlement service
 - [x] Vitest; `npm test` (CI: `npm run ci` = typecheck + lint + test)
-- [~] Playwright: config + onboarding/invitation spec written (mobile + desktop), **not yet run**: needs the Chromium download (`npx playwright install chromium`, ~150 MB), awaiting owner OK
+- [x] Playwright: onboarding/invitation spec passes on mobile + desktop
+- [x] Email verification required to publish or apply; resend banner
+- [x] Add-type forms reset after saving
 
 ### Step 3: Core marketplace vertical slice
 - [ ] **Public landing page** (marketing, signup paths for posters and providers), added by owner 2026-10-28
@@ -54,8 +58,10 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - [ ] Privacy release enforced in API, file access, notifications
 - [ ] Private file storage: local adapter + R2 adapter, expiring links, type/size validation
 - [ ] Demo seed data (labeled, `is_demo`, separate command)
-- [ ] Tests: acceptance 1 (minus subscription), 2, 3, 4, 5, 6, 15
-- [ ] Mobile-viewport browser verification
+- [x] Tests: acceptance 1 (minus subscription), 2, 3, 4, 5, 6, 15 (15 through real HTTP handlers + session cookies, every role, 2 outsider orgs)
+- [ ] Mobile-viewport browser verification of marketplace screens (NOT DONE)
+- [ ] Playwright marketplace spec; `next build` with new screens (NOT DONE)
+(Other Step 3 items above: code complete and covered by integration tests, but the UI is not browser-verified yet, so they stay unchecked.)
 
 ## Phase 2: Execution and communication (outline)
 - [ ] Crews, vehicles, crew assignment, conflict warnings (test 13)
@@ -129,7 +135,10 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 
 ## Known failures / limitations
 
-- Playwright e2e not yet run (browser binary not downloaded).
+- Netlify functions cap request bodies at ~6 MB, so larger uploads will fail there. Phase 4: switch to direct-to-R2 presigned uploads.
+- ZIP distance needs the Census ZCTA centroid table (public, ~1 MB download, needs owner OK). Only demo/test ZIPs are loaded now; other ZIPs skip the distance filter with a notice.
+- Discovery doesn't yet filter by equipment/qualifications (brief §8); saved searches and map are Phase 2.
+- Messages don't exist yet (Phase 2), so test 15 doesn't cover them.
 - `npm audit`: 4 moderate advisories in drizzle-kit's bundled esbuild (dev-only tool, affects its dev server, not the app). Fix requires a breaking drizzle-kit downgrade; revisit when drizzle-kit updates.
 - Admin "Add category" form keeps its values after saving (cosmetic).
 - Email verification is sent but not yet required to use the app.
