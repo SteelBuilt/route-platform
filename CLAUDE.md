@@ -17,14 +17,17 @@ Read, in order: this file, `docs/PRODUCT_BRIEF.md`, `docs/PROGRESS.md`. Then `do
 - Zero commission; no escrow, job payments, payouts or invoicing between users.
 - Prices, seats, trial lengths, deadlines and limits are configuration (`plans`, `app_config`), never literals in code.
 - Out of scope: native apps, SMS, continuous GPS, truck-safe/oversize/permit routing, AI features, public API.
-- Never reference the first launch customer by name in code, seed data or branding. Product name comes from `APP_NAME`.
+- Product is "RouteYard by SBS" (SteelBuilt Systems). All branding (name, logo, colors, domain, legal entity) comes from `src/config/brand.ts` / env. No brand strings in components.
+- Never reference the first launch customer (a dealer) by name in code or seed data.
+- $0/month budget: free tiers only. Billing is built but disabled (`billing.enabled=false`), Stripe test mode only until the owner approves live billing. Launch is a 90-day free beta.
+- Develop on preview/branch deploys. Netlify Free meters production deploys (15 of 300 monthly credits each).
 - Integrations go through adapters. Missing credentials → labeled local mode or a loud failure, never a faked success.
 - Demo data only through the demo seed command, flagged `is_demo`. Production must never look populated by fake data.
 - Verification copy is precise: "self-reported", "document submitted", "admin reviewed". Never "insured"/"licensed".
 
 ## Stack
 
-Next.js (App Router, TypeScript) on Vercel · Postgres (Neon in prod, PGlite locally/tests) · Drizzle ORM + drizzle-kit · Better Auth · Cloudflare R2 · Resend · Stripe (Phase 3) · Mapbox (Phase 2) · Sentry · Vercel Cron + Postgres `jobs` table · Tailwind · Vitest + Playwright.
+Next.js (App Router, TypeScript) on Netlify Free · Postgres (Neon Free in prod, PGlite locally/tests) · Drizzle ORM + drizzle-kit · Better Auth · Cloudflare R2 · Resend · Stripe (Phase 3, test mode) · Mapbox (Phase 2) · Sentry · Netlify Scheduled Function → `/api/cron/tick` + Postgres `jobs` table · Tailwind · Vitest + Playwright.
 
 ## Security conventions
 

@@ -16,7 +16,7 @@ Companies can post individual jobs or multi-stop routes weeks in advance. Qualif
 
 The platform should also be useful for companies managing crews they already work with. It must deliver ongoing operational value even when no new marketplace connection is needed.
 
-Use a configurable working product name until a final name is selected. Do not use any existing dealer's branding; this is intended to serve the broader industry.
+This is a SteelBuilt Systems (SBS) product. Product name: "RouteYard by SBS". It is intended to serve the broader industry, not only SBS's own customers. All branding (product name, logo, colors, domain, legal entity) lives in configuration, not code, so the product can be rebranded or spun out later without code changes. *(Updated 2026-10-28 by owner; replaces the earlier "configurable working name / no dealer branding" rule.)*
 
 Initial market: United States.
 
@@ -392,14 +392,29 @@ Do not call the app production-ready merely because it compiles. State precisely
 - All prices, seat counts, and trial lengths are configuration, not code.
 - Zero commission. No escrow, job payments, or payouts.
 
+*Added 2026-10-28 by owner:*
+
+- **Launch as a 90-day free beta** for posters and providers, no card required. Billing is built fully but disabled behind a config flag. Stripe stays in test mode until the owner approves live billing.
+- **Founder pricing:** beta users who convert get a configurable discount, locked in for as long as they stay subscribed.
+- **Invited work is free for providers:** an unpaid provider org can accept and complete routes from posters that invited it (invitation-only or preferred visibility). A paid provider plan is needed only to browse the marketplace and apply to uninvited routes.
+- **Dealers with in-house crews:** the poster plan includes managing in-house crews. A dealer that also applies to other posters' routes adds a provider plan.
+- **Seats:** owner, dispatcher and crew leader are paid leader seats. Crew members and limited staff are free.
+- **Defaults:** 24 h to accept an award, 7-day failed-payment grace, 7-day invitations, 14-day customer links (all configuration).
+- **Before award:** pickup shows city and state only. Stops show 5-digit ZIP.
+- **Two-way reviews:** providers review posters too, completed assignments only.
+- **Proposals** (when a route accepts them) = price + note + proposed availability.
+- **Customer completion acknowledgment** = typed name + timestamp.
+
 ## 20. Launch context
 
-- First posting customer: an existing metal building dealer operating in TX, OK, AR, LA, MO, MS, and KS. It uses a normal customer account with no special privileges. Do not reference it by name in code, seed data, or branding.
+- First posting customer: an existing metal building dealer operating in TX, OK, AR, LA, MO, MS, and KS. It uses a normal customer account with no special privileges. Do not reference it by name in code or seed data. Product branding is SBS ("RouteYard by SBS"), held in configuration (Section 1).
 - Launch seeding region: Texas first, then the other six states. Discovery works nationwide.
 - The owner is not a full-time developer. Favor managed services and low operational overhead over flexibility. Avoid self-managed servers, queues, or containers unless there is no managed alternative.
-- Monthly infrastructure budget for launch: [FILL IN]
-- Accounts already available: [FILL IN — Stripe, domain, email provider, GitHub]
-- Working product name: [FILL IN, or use a configurable placeholder]
+- Monthly infrastructure budget for launch: **$0/month. Free tiers only.** Hosting must be a free tier whose terms allow commercial use.
+- Accounts: SBS's existing Stripe account, with separate RouteYard products and prices. Domain: steelbuiltsystems.com. Other accounts (email provider, GitHub, hosting, database, storage, monitoring, maps) to be confirmed.
+- Product name: **RouteYard by SBS**. Production host: **routeyard.steelbuiltsystems.com**.
+
+*(Section updated 2026-10-28 by owner.)*
 
 ## 21. Not in launch scope
 

@@ -45,6 +45,8 @@ Ranked by expected impact:
 
 ## 5. Can the prices cover costs?
 
+> **Update 2026-10-28:** the owner set a $0/month budget and a 90-day free beta. Launch runs on free tiers. Hosting is Netlify Free, because Vercel Hobby forbids commercial use. Limits and when we hit them are in ARCHITECTURE §7. The table below still applies once billing is turned on and the app moves to paid tiers.
+
 Assumptions: 20% of orgs are posters at $100. 80% are providers averaging $16.50 (0.3 extra seats). All billing is monthly. Stripe fees are 2.9% + $0.30 per charge plus 0.7% Stripe Billing, which comes to about **$0.84 on $15 (5.6%)** and **$3.90 on $100 (3.9%)**. Vendor prices are list prices as I last knew them and must be re-checked before committing.
 
 | | 10 orgs | 100 orgs | 500 orgs |
@@ -88,7 +90,9 @@ Conclusions:
 
 ## 8. Assumptions needing owner confirmation
 
-See the open questions in `docs/PROGRESS.md`. The ones that affect the business model:
+> **Answered 2026-10-28.** All six items below were answered by the owner. See brief §19 and the PROGRESS.md decision log. Kept here for history.
+
+The ones that affected the business model:
 
 1. Invited providers working for the poster who invited them: free or paid? (§1.1)
 2. An org that both posts and provides (a dealer with in-house crews): one subscription or two?

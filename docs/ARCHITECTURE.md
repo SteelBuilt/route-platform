@@ -6,16 +6,16 @@ Covers all four phases so later phases add features without redesigning tables. 
 
 | Concern | Choice | Why |
 |---|---|---|
-| App framework | **Next.js (App Router) + TypeScript** | One codebase for UI and API (route handlers / server actions). Mature, with first-class Vercel deploys. |
-| Hosting | **Vercel** (Pro plan for commercial use and cron) | Zero servers to manage, preview deploys per branch. |
-| Database | **Postgres on Neon** | Managed, serverless, scales to zero, database branching for previews. |
+| App framework | **Next.js (App Router) + TypeScript** | One codebase for UI and API (route handlers / server actions). Mature, runs on any Node host. |
+| Hosting | **Netlify Free plan** (decided 2026-10-28; $0 budget) | Terms allow commercial use; Vercel Hobby forbids it. Full Node functions (no 10 ms CPU cap like Cloudflare Workers Free). Scheduled functions on all plans. See §7 for limits. |
+| Database | **Postgres on Neon Free** | Managed, serverless, scales to zero, database branching for previews. |
 | Local / test database | **PGlite** (in-process Postgres) | `npm run dev` with no Postgres or Docker install. Same SQL dialect as production. |
 | ORM / migrations | **Drizzle ORM + drizzle-kit** | SQL-first, typed, plain SQL migration files checked into git. |
 | Auth | **Better Auth** (email + password and magic link) | Library, not a vendor. Users and sessions live in our Postgres. Our own tables own orgs and roles. |
 | Authorization | Our own policy module + **Postgres row-level security (RLS)** | Defense in depth (§4). |
 | Files | **Cloudflare R2** (S3 API) with presigned URLs. Local adapter: disk plus HMAC-signed URLs | Private by default, no egress fees. |
 | Email | **Resend**. Local adapter: a dev outbox table shown at `/dev/outbox` | Simple API. The local mode is labeled and never claims a send happened. |
-| Background jobs | **Vercel Cron** → `/api/cron/*` processing a Postgres **job / outbox table** | No queue service to run. Jobs are idempotent and retried from the table. |
+| Background jobs | **Netlify Scheduled Function** → calls the app's `/api/cron/tick` processing a Postgres **job / outbox table** | No queue service to run. Jobs are idempotent and retried from the table. The tick handler is host-agnostic (any scheduler that can POST with `CRON_SECRET`). |
 | Billing [P3] | **Stripe** Checkout, Billing Portal, verified webhooks | One subscription per org with a seat quantity. |
 | Maps [P2] | **Mapbox** (tiles, geocoding, directions estimate) + Census ZCTA centroid table for ZIP distance | Distance filters work without API calls. Directions are labeled "estimate; not truck-safe routing". |
 | Errors / logs | **Sentry** + structured JSON logs (pino) to Vercel log drain | |
@@ -25,7 +25,7 @@ Covers all four phases so later phases add features without redesigning tables. 
 
 Every external integration sits behind an adapter interface (`src/server/adapters/*`), selected by environment variables. When credentials are missing, the adapter runs in a clearly labeled local mode or fails loudly. It never fakes success.
 
-The product name comes from `APP_NAME` (default "RouteYard (working name)").
+All branding is configuration (`src/config/brand.ts` reads env vars): `BRAND_PRODUCT_NAME` ("RouteYard by SBS"), `BRAND_SHORT_NAME`, `BRAND_LEGAL_ENTITY`, `BRAND_LOGO_URL`, `BRAND_PRIMARY_COLOR`, `BRAND_SUPPORT_EMAIL`, `APP_URL` (https://routeyard.steelbuiltsystems.com). No brand string appears in components.
 
 ## 2. Data model
 
@@ -62,13 +62,13 @@ Conventions: UUID primary keys. `created_at`/`updated_at` on every table. Money 
 
 - **zip_centroids** [P1]: zip (PK), lat, lng, city, state, timezone. Loaded from public Census ZCTA data.
 - **locations** [P1]: private exact location. id, org_id (owner = poster), line1, line2, city, state, zip, lat, lng, timezone, geocode_source. **Readable only under the privacy release (§4.3).**
-- Public projections are stored on the route/stop rows themselves (city, state, zip, zip3, approx_lat/approx_lng rounded to ~0.1°), so discovery queries never touch `locations`.
+- Public projections are stored on the route/stop rows themselves, so discovery queries never touch `locations`. Owner decision (2026-10-28): **pickup shows city + state only** before award (no ZIP; map point = city centroid). **Stops show 5-digit ZIP** (map point = ZIP centroid).
 
 ### Routes (postings)
 
 - **route_templates** [P1]: id, org_id, name, payload (jsonb snapshot of route and stops minus dates/private data), created_by.
 - **routes** [P1]: id, org_id (poster), reference_code (human-readable), title, building_category_id, job_type, status (§3.1), visibility (`marketplace` | `preferred` | `invitation`),
-  pickup_location_id → locations (nullable for installation only), pickup_city/state/zip/zip3/approx_lat/approx_lng (public), pickup_window_start/end, pickup_timezone,
+  pickup_location_id → locations (nullable for installation only), pickup_city/pickup_state/approx_lat/approx_lng (public; city centroid), pickup_window_start/end, pickup_timezone,
   estimated_duration_minutes, crew_size_required, loading_responsibility / unloading_responsibility (`poster` | `provider` | `customer` | `other`), responsibility_notes,
   compensation_mode (`fixed` | `proposals`), compensation_basis (`route_total` | `per_stop` | `per_unit`), compensation_unit_label, compensation_cents (nullable when proposals with no guide),
   provider_notes (provider-visible before award), assignment_notes (visible after acceptance only), internal_notes (poster org only),
@@ -130,7 +130,8 @@ Conventions: UUID primary keys. `created_at`/`updated_at` on every table. Money 
 ### Billing and entitlements
 
 - **plans** [P1 seed, P3 Stripe]: id, code (`provider_monthly` | `provider_annual` | `poster_monthly` | `poster_annual`), audience (`provider` | `poster`), base_price_cents, included_leader_seats, extra_seat_price_cents, interval (`month` | `year`), trial_days, stripe_price_id, stripe_seat_price_id, active. **All numbers here, none in code.**
-- **subscriptions** [P1 table, P3 Stripe]: id, org_id (unique per audience), plan_id, status (`none` | `trialing` | `active` | `past_due` | `grace` | `restricted` | `canceled`), trial_ends_at, current_period_end, grace_ends_at, cancel_at_period_end, leader_seat_quantity, stripe_customer_id, stripe_subscription_id, updated_from_event_id.
+- **subscriptions** [P1 table, P3 Stripe]: id, org_id, audience (`poster` | `provider`; unique per org + audience, so a dealer can hold both), plan_id, status (`none` | `beta` | `trialing` | `active` | `past_due` | `grace` | `restricted` | `canceled`), beta_ends_at, trial_ends_at, current_period_end, grace_ends_at, cancel_at_period_end, leader_seat_quantity, founder_eligible (bool, set for beta orgs), founder_discount_percent (locked at conversion), stripe_coupon_id, stripe_customer_id, stripe_subscription_id, updated_from_event_id.
+- Beta and founder settings live in `app_config`: `billing.enabled` (false at launch), `billing.stripe_mode` (`test` until owner approval), `beta.enabled`, `beta.length_days` (90), `beta.started_at`, `founder.discount_percent`, `founder.offer_ends_at`.
 - **billing_events** [P3]: id, stripe_event_id (unique: idempotency), type, payload, processed_at, error.
 - **app_config** [P1]: key, value (jsonb). Grace days, deadlines, link TTLs, upload limits, product name override.
 
@@ -258,19 +259,41 @@ Upload: the server validates the declared type against magic bytes, an allowlist
 |---|---|---|---|
 | `route.publish`, `route.award` (poster) | ✓ | ✓ (with banner) | ✗ |
 | `marketplace.browse`, `application.submit`, `saved_search.*` (provider) | ✓ | ✓ (with banner) | ✗ |
-| `award.accept` | ✓ | ✓ | ✗ (open question: invitation routes from the inviting poster) |
+| `award.accept`, `application.submit` on an **invited/preferred** route from the inviting poster | ✓ | ✓ | **✓ (owner decision: invited work is free)** |
+| `award.accept` on a marketplace route | ✓ | ✓ | ✗ |
 | `assignment.execute` (milestones, photos, issues, completion) | ✓ | ✓ | **✓ for assignments already accepted** |
 | `messages.active_assignment` | ✓ | ✓ | **✓** |
 | `history.read`, `org.export` | ✓ | ✓ | **✓** |
 | Leader seats above quantity | n/a | n/a | Extra leader memberships can't be added. Existing ones keep access during grace, then need seats bought or a role change. |
 
-`past_due` → `grace` (on first failed payment, `grace_ends_at = now + grace_days`) → `restricted` (cron, when grace ends). Any successful payment → `active`. In Phase 1, `subscriptions` rows are created as `trialing` with config-driven trial lengths and are flipped by an admin/dev tool. In Phase 3, the Stripe webhook handler becomes the only writer (except the admin override, which is audited).
+`beta` counts like `active`. While `beta.enabled`, new orgs get a `beta` subscription with `beta_ends_at = beta.started_at + beta.length_days` (one shared beta window), `founder_eligible = true`, no card. When the beta ends and `billing.enabled` is still false, `beta` orgs stay entitled (no surprise lockout) and the admin console shows the count. When billing is turned on, beta orgs are prompted to subscribe. If they convert before `founder.offer_ends_at`, the founder discount is stored on their subscription (Stripe coupon, duration "forever") and stays locked in.
+
+`past_due` → `grace` (on first failed payment, `grace_ends_at = now + grace_days`) → `restricted` (cron, when grace ends). Any successful payment → `active`. In Phase 1, `subscriptions` rows are created as `beta` and can be flipped by an admin/dev tool. In Phase 3, the Stripe webhook handler becomes the only writer (except the admin override, which is audited). Checkout is built fully but returns "billing not enabled" while `billing.enabled = false`.
+
+A poster subscription grants poster features and in-house crew management. Provider marketplace features check the `provider` subscription separately.
 
 ## 6. Background jobs (cron)
 
-`/api/cron/tick` (every 5 min) runs due rows from `jobs` and these sweepers, all idempotent through `dedupe_key`: award expiry, route/application deadline expiry, grace-to-restricted transitions, document expiration reminders (30/14/3 days before, and on expiry), daily/weekly digests, customer-link expiry. The cron endpoint requires `CRON_SECRET`.
+`/api/cron/tick` (every 15 min, triggered by a Netlify Scheduled Function; 30 s execution limit, so the handler processes in bounded batches) runs due rows from `jobs` and these sweepers, all idempotent through `dedupe_key`: award expiry, route/application deadline expiry, grace-to-restricted transitions, document expiration reminders (30/14/3 days before, and on expiry), daily/weekly digests, customer-link expiry. The cron endpoint requires `CRON_SECRET`.
 
-## 7. Repository layout (planned)
+## 7. Free-tier limits (checked 2026-10-28)
+
+$0/month budget. Ordered by which limit we hit first. Usage figures are rough estimates.
+
+| Service | Free limit | What happens | Hit at roughly |
+|---|---|---|---|
+| **Netlify** | 300 credits/month, hard cap. Production deploy = 15, functions = 10/GB-hour, 10k requests = 2, bandwidth = 20/GB. Preview and branch deploys are not metered. | **Site paused ("Site not available")** until the next cycle. Netlify may also remove free projects without notice (Self-Serve Agreement). | **First limit hit.** 10 production deploys = 150 credits. The remaining ~150 credits cover about 3 GB of bandwidth, or ~400k requests, or ~15 GB-hours of functions. Roughly **50–100 active orgs** with light daily use. **Rule: develop on preview/branch deploys; deploy production at most ~8×/month.** |
+| **Resend** | 3,000 emails/month, **100/day** | Sends rejected after the cap. | The **daily cap** comes first: ~100 emails/day is about **30–50 active orgs**. Mitigations: digest-by-default notifications, a 1-email cap per event, and an in-app fallback. Overflow emails stay queued in the `jobs` table and send the next day. |
+| **Neon** | 1 GB storage, 100 CU-hours/month, 5 GB egress, suspends after 5 min idle | Compute suspends until next month (CU-hours/egress). Writes blocked (storage). | CU-hours: ~100 h at 0.25 CU = ~400 hours awake/month. Business-hours traffic plus a 15-min cron tick keeps it awake much of the day, so expect **~100+ active orgs** before trouble. Storage: ~1 GB is tens of thousands of routes (files live in R2). **Cold start** after idle: ~0.5–1 s on the first request. |
+| **Mapbox** (Phase 2) | 50k map loads, 100k geocodes, 100k directions/month | Billed beyond free (card on file needed for an account). | 50k map loads ≈ **300–500 active providers** browsing the map daily. Geocoding is only at posting time. Directions only on itinerary view. |
+| **Cloudflare R2** | 10 GB storage, 1M Class A, 10M Class B ops | Billed beyond free. | 10 GB ≈ 5,000 routes with ~5 photos at ~400 KB (images downscaled on upload). **~200+ active orgs** over a year. |
+| **Sentry** | 5k errors, 1 user | Events dropped. | Only during an error storm. Sample rates are configured. |
+| **Stripe** | No monthly fee; per-charge fees only once live | n/a | Not used until billing is enabled. |
+| **Domain** | Subdomain of steelbuiltsystems.com | $0 | n/a |
+
+When the beta grows past the first limits, the cheapest step up is Netlify Pro or Vercel Pro (~$19–20/month). The app is plain Next.js, so moving hosts is a config change, not a rewrite.
+
+## 8. Repository layout (planned)
 
 ```
 src/
