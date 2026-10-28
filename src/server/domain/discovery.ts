@@ -9,6 +9,7 @@ import {
   applications,
   buildingCategories,
   organizations,
+  providerProfiles,
   routeInvitations,
   routes,
   stops,
@@ -52,6 +53,8 @@ export const discoveryFilters = z.object({
   minCompensation: z.coerce.number().min(0).optional().or(z.literal("")).transform((v) => (v === "" ? undefined : v)),
   stops: z.enum(["any", "single", "multi"]).default("any"),
   scope: z.enum(["all", "invited"]).default("all"),
+  // Limit to the building systems listed on the provider's profile.
+  mySystems: z.preprocess((v) => v === true || v === "1" || v === "on", z.boolean()).default(false),
 });
 
 export type DiscoveryFilters = z.input<typeof discoveryFilters>;
@@ -89,6 +92,17 @@ export async function searchRoutes(ctx: RequestContext, raw: DiscoveryFilters, n
         .from(buildingCategories)
         .where(eq(buildingCategories.parentId, f.categoryId));
       conds.push(inArray(routes.buildingCategoryId, [f.categoryId, ...kids.map((k) => k.id)]));
+    }
+    // Matching uses the profile's building systems, never the primary sector.
+    const [profile] = await tx
+      .select({ ids: providerProfiles.buildingCategoryIds })
+      .from(providerProfiles)
+      .where(eq(providerProfiles.orgId, ctx.orgId));
+    const mySystems = profile?.ids ?? [];
+    let systemsNote: string | null = null;
+    if (f.mySystems) {
+      if (mySystems.length) conds.push(inArray(routes.buildingCategoryId, mySystems));
+      else systemsNote = "Your profile doesn't list any building systems yet, so that filter was skipped.";
     }
     if (f.jobType) conds.push(eq(routes.jobType, f.jobType));
     if (f.state) {
@@ -143,6 +157,7 @@ export async function searchRoutes(ctx: RequestContext, raw: DiscoveryFilters, n
         jobType: routes.jobType,
         visibility: routes.visibility,
         categoryName: buildingCategories.name,
+        buildingCategoryId: routes.buildingCategoryId,
         posterName: organizations.name,
         posterIsDemo: organizations.isDemo,
         pickupCity: routes.pickupCity,
@@ -172,11 +187,14 @@ export async function searchRoutes(ctx: RequestContext, raw: DiscoveryFilters, n
       results: rows.map((r) => ({
         ...r,
         firstServiceDate: r.firstServiceDate ? new Date(r.firstServiceDate) : null,
+        inMySystems: mySystems.includes(r.buildingCategoryId),
         compensationCents: showPay ? r.compensationCents : null,
         compensationHidden: !showPay,
       })),
       marketplaceAccess: marketplace.allowed,
       distanceNote,
+      systemsNote,
+      hasProfileSystems: mySystems.length > 0,
     };
   });
 }

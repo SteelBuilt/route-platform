@@ -18,7 +18,7 @@ import {
   updateRoute,
 } from "@/server/domain/routes";
 import { Invalid } from "@/server/errors";
-import { requireOrgSession, runAction, type ActionState } from "@/server/session";
+import { requireOrgSession, runAction, runActionAndRedirect, type ActionState } from "@/server/session";
 
 function readPayload(form: FormData): RouteInputRaw {
   let data: RouteInputRaw;
@@ -46,29 +46,23 @@ export async function saveRouteAction(routeId: string | null, _: ActionState, fo
 
 export async function publishAction(routeId: string, _: ActionState): Promise<ActionState> {
   const ctx = await requireOrgSession();
-  return runAction(async () => {
+  return runActionAndRedirect(async () => {
     await publishRoute(ctx, routeId);
-    revalidatePath(`/app/routes/${routeId}`);
-    return "Published. Matching providers can now find this route.";
-  });
+  }, `/app/routes/${routeId}`, "published");
 }
 
 export async function unpublishAction(routeId: string, _: ActionState): Promise<ActionState> {
   const ctx = await requireOrgSession();
-  return runAction(async () => {
+  return runActionAndRedirect(async () => {
     await unpublishRoute(ctx, routeId);
-    revalidatePath(`/app/routes/${routeId}`);
-    return "Moved back to draft.";
-  });
+  }, `/app/routes/${routeId}`, "unpublished");
 }
 
 export async function cancelAction(routeId: string, _: ActionState, form: FormData): Promise<ActionState> {
   const ctx = await requireOrgSession();
-  return runAction(async () => {
+  return runActionAndRedirect(async () => {
     await cancelRoute(ctx, routeId, String(form.get("reason") ?? ""));
-    revalidatePath(`/app/routes/${routeId}`);
-    return "Route cancelled.";
-  });
+  }, `/app/routes/${routeId}`, "cancelled");
 }
 
 export async function duplicateAction(routeId: string, _: ActionState): Promise<ActionState> {
@@ -104,23 +98,19 @@ export async function reviewAction(
 
 export async function awardAction(routeId: string, applicationId: string, _: ActionState, form: FormData): Promise<ActionState> {
   const ctx = await requireOrgSession();
-  return runAction(async () => {
+  return runActionAndRedirect(async () => {
     const hours = Number(form.get("acceptHours") || 24);
     // One key per form render: a double-submitted form returns the same award.
     const key = String(form.get("idempotencyKey") || randomUUID());
     await issueAward(ctx, routeId, applicationId, { idempotencyKey: key, acceptHours: hours });
-    revalidatePath(`/app/routes/${routeId}`);
-    return "Award sent. The provider has until the deadline to accept.";
-  });
+  }, `/app/routes/${routeId}`, "awarded");
 }
 
 export async function revokeAwardAction(routeId: string, awardId: string, _: ActionState): Promise<ActionState> {
   const ctx = await requireOrgSession();
-  return runAction(async () => {
+  return runActionAndRedirect(async () => {
     await revokeAward(ctx, awardId);
-    revalidatePath(`/app/routes/${routeId}`);
-    return "Award revoked. The route is open again.";
-  });
+  }, `/app/routes/${routeId}`, "revoked");
 }
 
 export async function uploadAction(routeId: string, _: ActionState, form: FormData): Promise<ActionState> {

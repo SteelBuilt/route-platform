@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SECTOR_LABELS, SECTOR_ROLES, isValidSectorRole } from "@/lib/sectors";
+import { SECTOR_DEFAULT_CATEGORY, SECTOR_LABELS, SECTOR_ROLES, isValidSectorRole } from "@/lib/sectors";
 
 describe("industry sectors", () => {
   it("offers exactly the owner-specified roles per sector", () => {
@@ -7,7 +7,7 @@ describe("industry sectors", () => {
     expect(roles).toEqual({
       red_iron: ["poster", "installer", "transporter", "delivery_installer"],
       cold_formed_steel: ["poster", "installer", "transporter", "delivery_installer"],
-      tube_steel: ["poster", "delivery_installer"],
+      tube_steel: ["poster", "installer", "delivery_installer"],
       portable_sheds: ["poster", "transporter"],
     });
     expect(Object.values(SECTOR_LABELS)).toEqual(["Red Iron", "Cold Formed Steel", "Tube Steel", "Portable Sheds"]);
@@ -22,10 +22,22 @@ describe("industry sectors", () => {
     expect(d("portable_sheds", "poster")).toBe("You manufacture, sell or supply portable sheds.");
     expect(d("portable_sheds", "transporter")).toBe("You transport, deliver and place portable sheds.");
     expect(d("red_iron", "installer")).toBe("You install or erect buildings.");
+    const tubeInstaller = SECTOR_ROLES.tube_steel.find((x) => x.role === "installer")!;
+    expect(tubeInstaller.title).toBe("Installation company or independent crew");
+  });
+
+  it("maps each primary sector to a default building category", () => {
+    expect(SECTOR_DEFAULT_CATEGORY).toEqual({
+      red_iron: "red-iron",
+      cold_formed_steel: "cold-formed-steel",
+      tube_steel: "tube-steel",
+      portable_sheds: "portable-buildings",
+    });
   });
 
   it("validates pairs", () => {
-    expect(isValidSectorRole("tube_steel", "installer")).toBe(false);
+    expect(isValidSectorRole("tube_steel", "installer")).toBe(true);
+    expect(isValidSectorRole("tube_steel", "transporter")).toBe(false);
     expect(isValidSectorRole("portable_sheds", "delivery_installer")).toBe(false);
     expect(isValidSectorRole("cold_formed_steel", "transporter")).toBe(true);
   });

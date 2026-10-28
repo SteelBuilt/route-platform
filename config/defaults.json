@@ -30,6 +30,7 @@
     { "slug": "metal-buildings", "name": "Metal buildings", "is_umbrella": true, "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 20 },
     { "slug": "tube-steel", "name": "Tube-steel metal buildings", "parent": "metal-buildings", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 21 },
     { "slug": "red-iron", "name": "Red-iron / rigid-frame steel buildings", "parent": "metal-buildings", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 22 },
+    { "slug": "cold-formed-steel", "name": "Cold formed steel buildings", "parent": "metal-buildings", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery_installation", "sort": 23 },
     { "slug": "other-systems", "name": "Other building systems", "allowed_job_types": ["delivery", "installation", "delivery_installation"], "default_job_type": "delivery", "sort": 90 }
   ],
   "equipment_types": [

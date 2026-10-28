@@ -17,8 +17,22 @@ const READINESS: Record<string, string> = {
   verified: "Verified by poster",
 };
 
-export default async function ProviderRoutePage({ params }: { params: Promise<{ id: string }> }) {
+const DONE: Record<string, string> = {
+  applied: "Application sent. The posting company will review applicants and may award the route.",
+  withdrawn: "Application withdrawn.",
+  accepted: "Assignment accepted. Exact addresses, contacts and files are below.",
+  declined: "Award declined.",
+};
+
+export default async function ProviderRoutePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ done?: string }>;
+}) {
   const { id } = await params;
+  const { done } = await searchParams;
   const ctx = await requireOrgSession(`/app/find/${id}`);
   if (!ctx.capabilities.has("marketplace.browse")) redirect("/app");
   const d = await getRouteForProvider(ctx, id);
@@ -39,7 +53,8 @@ export default async function ProviderRoutePage({ params }: { params: Promise<{ 
 
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-4">
-          {d.assignment && (
+          {done && DONE[done] && <Alert kind="ok">{DONE[done]}</Alert>}
+          {d.assignment && done !== "accepted" && (
             <Alert kind="ok">You accepted this assignment. Exact addresses, contacts and files are shown below.</Alert>
           )}
           <Card>
@@ -209,6 +224,18 @@ export default async function ProviderRoutePage({ params }: { params: Promise<{ 
                   />
                 </Field>
               </ActionForm>
+              {!d.inMySystems && (
+                <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm">
+                  {d.hasProfileSystems
+                    ? `${d.categoryName} isn't in the building systems on your profile. The poster will see that when comparing applicants.`
+                    : "Your profile doesn't list your building systems yet. Posters compare applicants on them."}{" "}
+                  {ctx.capabilities.has("org.manage") && (
+                    <a href="/app/profile" className="font-semibold underline">
+                      Update profile
+                    </a>
+                  )}
+                </p>
+              )}
               <p className="mt-3 text-sm text-muted">Applying doesn&apos;t commit you or hold the route. You confirm only if you&apos;re awarded.</p>
             </Card>
           )}

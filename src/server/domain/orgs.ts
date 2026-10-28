@@ -26,7 +26,7 @@ import { INDUSTRY_SECTORS, isValidSectorRole } from "@/lib/sectors";
 export const createOrgInput = z
   .object({
   name: z.string().trim().min(2).max(120),
-  industrySector: z.enum(INDUSTRY_SECTORS, { message: "Choose your industry sector" }),
+  industrySector: z.enum(INDUSTRY_SECTORS, { message: "Choose your primary sector" }),
   kind: z.enum(ORG_KINDS, { message: "Choose what your company does" }),
   hqState: z
     .string()
@@ -42,7 +42,7 @@ export const createOrgInput = z
   timezone: z.string().default("America/Chicago"),
   })
   .refine((d) => isValidSectorRole(d.industrySector, d.kind), {
-    message: "That company type isn't available for the selected industry sector",
+    message: "That company type isn't available for the selected primary sector",
     path: ["kind"],
   });
 

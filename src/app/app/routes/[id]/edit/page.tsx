@@ -5,7 +5,8 @@ import { getRouteForPoster } from "@/server/domain/routes";
 import { requireOrgSession } from "@/server/session";
 import { saveRouteAction } from "../../actions";
 import { editorOptions } from "../../editor-data";
-import { RouteEditor, type RouteState } from "../../route-editor";
+import { RouteEditor } from "../../route-editor";
+import type { RouteState } from "../../route-state";
 
 export const metadata: Metadata = { title: "Edit route" };
 

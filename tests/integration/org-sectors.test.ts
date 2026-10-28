@@ -1,4 +1,4 @@
-// Industry sector + company role at onboarding: every combination, server-side
+// Primary sector + company role at onboarding: every combination, server-side
 // rejection of invalid ones, the database constraint, and pre-sector orgs.
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -27,7 +27,7 @@ describe("sector and company role", () => {
     const u = await makeUser();
     await expect(createOrganization(u.id, { name: "Bad pair", industrySector: sector, kind })).rejects.toMatchObject({
       status: 422,
-      message: "That company type isn't available for the selected industry sector",
+      message: "That company type isn't available for the selected primary sector",
     });
     const mine = await getDb().select().from(memberships).where(eq(memberships.userId, u.id));
     expect(mine).toHaveLength(0);
@@ -37,7 +37,7 @@ describe("sector and company role", () => {
     const u = await makeUser();
     await expect(
       createOrganization(u.id, { name: "No sector", kind: "poster" } as never),
-    ).rejects.toMatchObject({ status: 422, message: "Choose your industry sector" });
+    ).rejects.toMatchObject({ status: 422, message: "Choose your primary sector" });
     await expect(
       createOrganization(u.id, { name: "No role", industrySector: "red_iron" } as never),
     ).rejects.toMatchObject({ status: 422, message: "Choose what your company does" });
@@ -50,7 +50,7 @@ describe("sector and company role", () => {
     await expectDbError(
       getDb()
         .insert(organizations)
-        .values({ name: "Direct", slug: `direct-${Date.now()}`, kind: "installer", industrySector: "tube_steel" }),
+        .values({ name: "Direct", slug: `direct-${Date.now()}`, kind: "installer", industrySector: "portable_sheds" }),
       /organizations_sector_role/,
     );
     // Changing an existing org's kind into an invalid pair is also blocked.

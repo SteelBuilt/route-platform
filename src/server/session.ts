@@ -37,6 +37,17 @@ export function safeNext(next: unknown, fallback = "/app"): string {
 
 export type ActionState = { error?: string; ok?: string } | undefined;
 
+// For actions that change what the page shows (so the form that submitted may
+// disappear): on success, redirect with a `done` code the page turns into a
+// message; on failure, return the error to the form.
+export async function runActionAndRedirect(fn: () => Promise<unknown>, to: string, done: string): Promise<ActionState> {
+  const res = await runAction(async () => {
+    await fn();
+  });
+  if (res?.error) return res;
+  redirect(`${to}?done=${encodeURIComponent(done)}`);
+}
+
 // Runs a server action body and turns domain errors into form state.
 export async function runAction(fn: () => Promise<string | void>): Promise<ActionState> {
   try {

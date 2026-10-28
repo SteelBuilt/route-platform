@@ -76,6 +76,12 @@ export async function getRouteForProvider(ctx: RequestContext, routeId: string) 
     const showPay = ctx.capabilities.has("compensation.view");
     const { pickupLocationId: _p, ...publicRoute } = r.route;
 
+    const [profile] = await tx
+      .select({ ids: providerProfiles.buildingCategoryIds })
+      .from(providerProfiles)
+      .where(eq(providerProfiles.orgId, ctx.orgId));
+    const mySystems = profile?.ids ?? [];
+
     const released = await releasedAssignmentFor(tx, ctx, routeId);
     let privateDetails = null;
     if (released) {
@@ -96,6 +102,9 @@ export async function getRouteForProvider(ctx: RequestContext, routeId: string) 
       stops: stopRows.map(({ locationId: _l, ...s }) => s),
       requirements: reqs,
       invited,
+      // Matching is by the profile's building systems (not the primary sector).
+      inMySystems: mySystems.includes(r.route.buildingCategoryId),
+      hasProfileSystems: mySystems.length > 0,
       myApplication: myApp ?? null,
       myAward: myAward ?? null,
       assignment: released,
@@ -243,7 +252,10 @@ export async function listApplicants(ctx: RequestContext, routeId: string) {
           .groupBy(assignments.providerOrgId)
       : [];
     const invitedRows = await tx.select().from(routeInvitations).where(eq(routeInvitations.routeId, routeId));
+    const cats = await tx.select({ id: buildingCategories.id, name: buildingCategories.name }).from(buildingCategories);
     return rows.map((row) => ({
+      systems: (row.profile?.buildingCategoryIds ?? []).map((id) => cats.find((c) => c.id === id)?.name).filter(Boolean) as string[],
+      listsThisSystem: row.profile?.buildingCategoryIds.includes(r.buildingCategoryId) ?? false,
       ...row.app,
       orgName: row.orgName,
       orgKind: row.orgKind,

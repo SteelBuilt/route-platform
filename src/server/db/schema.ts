@@ -193,7 +193,8 @@ export const organizations = pgTable("organizations", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   kind: text("kind", { enum: ORG_KINDS }).notNull(),
-  // Chosen at onboarding. Null for organizations created before sectors existed.
+  // "Primary sector", chosen at onboarding. Only a default for route category
+  // and discovery filters; never a restriction. Null for pre-sector orgs.
   industrySector: text("industry_sector", { enum: INDUSTRY_SECTORS }),
   canPost: boolean("can_post").notNull().default(false),
   canProvide: boolean("can_provide").notNull().default(false),
@@ -216,7 +217,7 @@ export const organizations = pgTable("organizations", {
     "organizations_sector_role",
     sql`${t.industrySector} IS NULL
       OR ${t.industrySector} IN ('red_iron', 'cold_formed_steel')
-      OR (${t.industrySector} = 'tube_steel' AND ${t.kind} IN ('poster', 'delivery_installer'))
+      OR (${t.industrySector} = 'tube_steel' AND ${t.kind} IN ('poster', 'installer', 'delivery_installer'))
       OR (${t.industrySector} = 'portable_sheds' AND ${t.kind} IN ('poster', 'transporter'))`,
   ),
 ]);

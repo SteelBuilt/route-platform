@@ -28,8 +28,9 @@ const DEFAULT_DESCRIPTIONS: Record<CompanyRole, string> = {
   delivery_installer: "You deliver and install.",
 };
 
-// Roles available in each sector, in display order, with sector-specific wording.
-export const SECTOR_ROLES: Record<IndustrySector, { role: CompanyRole; description: string }[]> = {
+// Roles available in each sector, in display order, with sector-specific
+// wording. `title` overrides ROLE_TITLES where the sector words it differently.
+export const SECTOR_ROLES: Record<IndustrySector, { role: CompanyRole; description: string; title?: string }[]> = {
   red_iron: (["poster", "installer", "transporter", "delivery_installer"] as const).map((role) => ({
     role,
     description: DEFAULT_DESCRIPTIONS[role],
@@ -43,12 +44,26 @@ export const SECTOR_ROLES: Record<IndustrySector, { role: CompanyRole; descripti
       role: "poster",
       description: "You sell or supply tube steel buildings and coordinate delivery or installation crews.",
     },
+    {
+      role: "installer",
+      title: "Installation company or independent crew",
+      description: "You install tube steel buildings.",
+    },
     { role: "delivery_installer", description: "You deliver and install tube steel buildings." },
   ],
   portable_sheds: [
     { role: "poster", description: "You manufacture, sell or supply portable sheds." },
     { role: "transporter", description: "You transport, deliver and place portable sheds." },
   ],
+};
+
+// The building category each sector preselects on new routes and in discovery.
+// A default only: it never limits what an org can post or apply to.
+export const SECTOR_DEFAULT_CATEGORY: Record<IndustrySector, string> = {
+  red_iron: "red-iron",
+  cold_formed_steel: "cold-formed-steel",
+  tube_steel: "tube-steel",
+  portable_sheds: "portable-buildings",
 };
 
 export function isIndustrySector(v: unknown): v is IndustrySector {

@@ -23,15 +23,23 @@ import {
 
 export const metadata: Metadata = { title: "Route" };
 
+const DONE: Record<string, string> = {
+  published: "Published. Matching providers can now find this route.",
+  unpublished: "Moved back to draft.",
+  cancelled: "Route cancelled.",
+  awarded: "Award sent. The provider has until the deadline to accept.",
+  revoked: "Award revoked. The route is open again.",
+};
+
 export default async function RouteDetail({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; done?: string }>;
 }) {
   const { id } = await params;
-  const { saved } = await searchParams;
+  const { saved, done } = await searchParams;
   const ctx = await requireOrgSession(`/app/routes/${id}`);
   if (!ctx.capabilities.has("routes.post")) redirect("/app");
   const [data, applicants, awardState, docs] = await Promise.all([
@@ -54,7 +62,11 @@ export default async function RouteDetail({
       <PageTitle sub={`${route.referenceCode} · ${JOB_TYPE_LABEL[route.jobType]} · ${route.stopCount} stop(s)`}>
         {route.title}
       </PageTitle>
-      {saved && <div className="mb-4"><Alert kind="ok">Saved.</Alert></div>}
+      {(saved || (done && DONE[done])) && (
+        <div className="mb-4">
+          <Alert kind="ok">{saved ? "Saved." : DONE[done!]}</Alert>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
@@ -119,6 +131,13 @@ export default async function RouteDetail({
                         <div>
                           <dt className="inline font-semibold">Experience: </dt>
                           <dd className="inline">{a.yearsExperience != null ? `${a.yearsExperience} years` : "Not given"}</dd>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <dt className="inline font-semibold">Building systems: </dt>
+                          <dd className="inline">
+                            {a.systems.join(", ") || "Not given"}
+                            {!a.listsThisSystem && <span className="ml-1 font-semibold text-amber-800">(doesn&apos;t list this route&apos;s type)</span>}
+                          </dd>
                         </div>
                         <div className="sm:col-span-2">
                           <dt className="inline font-semibold">Serves: </dt>

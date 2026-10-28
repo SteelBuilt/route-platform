@@ -1,6 +1,7 @@
 // Request context: who is calling and in which org. Built from the session on
 // the server; the active org is never taken from client input directly.
 import { and, asc, eq } from "drizzle-orm";
+import type { IndustrySector } from "@/lib/sectors";
 import { capabilitiesFor, type Capability } from "./authz/roles";
 import { EmailNotVerified, Forbidden, Unauthenticated } from "./errors";
 import { getDb, type Executor } from "./db/client";
@@ -23,6 +24,7 @@ export type RequestContext = {
     canProvide: boolean;
     timezone: string;
     isDemo: boolean;
+    primarySector: IndustrySector | null;
   } | null;
   capabilities: Set<Capability>;
   sessionId?: string;
@@ -65,6 +67,7 @@ export async function buildContext(
           canProvide: pick.o.canProvide,
           timezone: pick.o.timezone,
           isDemo: pick.o.isDemo,
+          primarySector: pick.o.industrySector,
         }
       : null,
     capabilities: pick ? capabilitiesFor(pick.m.role, pick.m.permissionOverrides) : new Set(),

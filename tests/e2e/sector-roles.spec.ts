@@ -7,10 +7,11 @@ const ALL = [
   "Delivery / transport company",
   "Delivery and installation provider",
 ];
+const TUBE_INSTALLER = "Installation company or independent crew";
 const EXPECTED: Record<string, string[]> = {
   "Red Iron": ALL,
   "Cold Formed Steel": ALL,
-  "Tube Steel": ["Manufacturer, supplier or dealer", "Delivery and installation provider"],
+  "Tube Steel": ["Manufacturer, supplier or dealer", TUBE_INSTALLER, "Delivery and installation provider"],
   "Portable Sheds": ["Manufacturer, supplier or dealer", "Delivery / transport company"],
 };
 
@@ -29,14 +30,14 @@ const roleGroup = (page: Page) => page.getByRole("group", { name: "What does you
 
 test("each sector shows only its roles, and changing sector clears the role", async ({ page }) => {
   await signUp(page);
-  await expect(page.getByText("Choose your industry sector first.")).toBeVisible();
+  await expect(page.getByText("Choose your primary sector first.")).toBeVisible();
   await expect(roleGroup(page).getByRole("radio")).toHaveCount(0);
 
   for (const [sector, roles] of Object.entries(EXPECTED)) {
     await page.getByLabel(sector, { exact: true }).check();
     const radios = roleGroup(page).getByRole("radio");
     await expect(radios).toHaveCount(roles.length);
-    for (const r of ALL) {
+    for (const r of [...ALL, TUBE_INSTALLER]) {
       await expect(roleGroup(page).getByText(r, { exact: true })).toHaveCount(roles.includes(r) ? 1 : 0);
     }
   }

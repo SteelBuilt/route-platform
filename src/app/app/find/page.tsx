@@ -5,6 +5,7 @@ import { Alert, Button, ButtonLink, Card, EmptyState, Field, Input, PageTitle, S
 import { formatInZone, formatWindow } from "@/lib/time";
 import { listCategories } from "@/server/domain/catalog";
 import { searchRoutes, type DiscoveryFilters } from "@/server/domain/discovery";
+import { defaultCategoryId } from "@/server/domain/sector-defaults";
 import { AppError } from "@/server/errors";
 import { requireOrgSession } from "@/server/session";
 import { JOB_TYPE_LABEL, StatusBadge, compensationText } from "../format";
@@ -15,8 +16,13 @@ export default async function FindPage({ searchParams }: { searchParams: Promise
   const ctx = await requireOrgSession("/app/find");
   if (!ctx.capabilities.has("marketplace.browse") || !ctx.org.canProvide) redirect("/app");
   const sp = await searchParams;
+  // First visit (no filters in the URL): preselect the primary sector's
+  // category. Any submitted or cleared filter state is respected as-is.
+  const firstVisit = Object.keys(sp).length === 0;
+  const sectorCategory = firstVisit ? await defaultCategoryId(ctx) : null;
   const filters: DiscoveryFilters = {
-    categoryId: sp.categoryId ?? "",
+    categoryId: sectorCategory ?? sp.categoryId ?? "",
+    mySystems: sp.mySystems === "1",
     jobType: (sp.jobType ?? "") as DiscoveryFilters["jobType"],
     state: sp.state ?? "",
     zip: sp.zip ?? "",
@@ -36,7 +42,8 @@ export default async function FindPage({ searchParams }: { searchParams: Promise
     if (e instanceof AppError) error = e.message;
     else throw e;
   }
-  const active = Object.entries(sp).some(([k, v]) => v && k !== "scope");
+  const active = !!sectorCategory || Object.entries(sp).some(([k, v]) => v && k !== "scope" && k !== "radiusMiles" && k !== "stops");
+  const sectorCategoryName = sectorCategory ? categories.find((c) => c.id === sectorCategory)?.name : null;
 
   return (
     <>
@@ -109,15 +116,34 @@ export default async function FindPage({ searchParams }: { searchParams: Promise
               <option value="invited">Only routes I&apos;m invited to</option>
             </Select>
           </Field>
+          <label className="flex min-h-12 items-center gap-2 self-end">
+            <input type="checkbox" name="mySystems" value="1" defaultChecked={filters.mySystems as boolean} className="h-5 w-5" />
+            Only my building systems
+          </label>
           <div className="flex items-end gap-2">
             <Button type="submit">Apply filters</Button>
-            <ButtonLink href="/app/find" variant="secondary">
+            <ButtonLink href="/app/find?categoryId=" variant="secondary">
               Clear
             </ButtonLink>
           </div>
         </form>
       </details>
 
+      {sectorCategoryName && (
+        <div className="mb-4">
+          <Alert kind="info">
+            Showing {sectorCategoryName}, your primary sector.{" "}
+            <Link href="/app/find?categoryId=" className="font-semibold underline">
+              Show all building types
+            </Link>
+          </Alert>
+        </div>
+      )}
+      {data?.systemsNote && (
+        <div className="mb-4">
+          <Alert kind="info">{data.systemsNote}</Alert>
+        </div>
+      )}
       {error && <Alert>{error}</Alert>}
       {data && !data.marketplaceAccess && (
         <div className="mb-4">
@@ -155,6 +181,9 @@ export default async function FindPage({ searchParams }: { searchParams: Promise
                     <div className="flex flex-wrap gap-2">
                       {r.invited && <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900">Invited</span>}
                       {r.myApplicationStatus && <StatusBadge status={r.myApplicationStatus} kind="application" />}
+                      {data.hasProfileSystems && !r.inMySystems && (
+                        <span className="rounded-full bg-surface px-3 py-1 text-sm font-semibold text-muted">Not in your listed systems</span>
+                      )}
                     </div>
                   </div>
                   <p className="mt-2 text-lg font-semibold">{compensationText(r, r.compensationHidden)}</p>

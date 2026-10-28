@@ -1,6 +1,6 @@
 "use client";
 
-// Industry sector first, then only the company roles that sector allows.
+// Primary sector first, then only the company roles that sector allows.
 // Changing the sector clears the role so an invalid pair can't be submitted;
 // the server re-checks the pair (orgs.ts) and so does the database.
 import { useState } from "react";
@@ -23,7 +23,10 @@ export function SectorRoleFields({ audience }: { audience: "poster" | "provider"
   return (
     <>
       <fieldset>
-        <legend className="mb-1 font-semibold">Industry sector</legend>
+        <legend className="mb-1 font-semibold">Primary sector</legend>
+        <p className="-mt-1 mb-2 text-sm text-muted">
+          Sets your default building type for routes and search. You can still post or apply to any type.
+        </p>
         <div className="grid grid-cols-2 gap-2">
           {INDUSTRY_SECTORS.map((s) => (
             <label
@@ -49,7 +52,7 @@ export function SectorRoleFields({ audience }: { audience: "poster" | "provider"
         <legend className="mb-1 font-semibold">What does your company do?</legend>
         {!sector ? (
           <p id="role-hint" className="rounded-lg border-2 border-dashed border-line p-3 text-muted">
-            Choose your industry sector first.
+            Choose your primary sector first.
           </p>
         ) : roles.length === 0 ? (
           <p className="rounded-lg border-2 border-dashed border-line p-3 text-muted">
@@ -71,7 +74,7 @@ export function SectorRoleFields({ audience }: { audience: "poster" | "provider"
                 className="mt-1 h-5 w-5 shrink-0 accent-[var(--brand)]"
               />
               <span>
-                <span className="block font-semibold">{ROLE_TITLES[r.role]}</span>
+                <span className="block font-semibold">{r.title ?? ROLE_TITLES[r.role]}</span>
                 <span className="block text-sm text-muted">{r.description}</span>
               </span>
             </label>
