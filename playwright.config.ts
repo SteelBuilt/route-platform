@@ -14,6 +14,10 @@ export default defineConfig({
     url: "http://localhost:3100",
     reuseExistingServer: false,
     timeout: 180_000,
-    env: { PGLITE_DIR: ".data/pglite-e2e", PLATFORM_ADMIN_EMAILS: "e2e-admin@example.test" },
+    env: {
+      PGLITE_DIR: ".data/pglite-e2e",
+      APP_URL: "http://localhost:3100",
+      PLATFORM_ADMIN_EMAILS: "e2e-admin@example.test",
+    },
   },
 });
