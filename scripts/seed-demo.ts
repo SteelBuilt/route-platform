@@ -21,20 +21,6 @@ function local(days: number, hour: number) {
   return `${utcToZonedLocal(d, TZ).slice(0, 10)}T${String(hour).padStart(2, "0")}:00`;
 }
 
-// Approximate city-center coordinates so the demo's distance filter works.
-// Production loads real ZIP centroids from Census data (see PROGRESS.md).
-const DEMO_ZIPS = [
-  { zip: "75701", lat: 32.32, lng: -95.29, city: "Tyler", state: "TX" },
-  { zip: "75601", lat: 32.5, lng: -94.74, city: "Longview", state: "TX" },
-  { zip: "75901", lat: 31.34, lng: -94.73, city: "Lufkin", state: "TX" },
-  { zip: "75201", lat: 32.79, lng: -96.8, city: "Dallas", state: "TX" },
-  { zip: "76701", lat: 31.55, lng: -97.14, city: "Waco", state: "TX" },
-  { zip: "78701", lat: 30.27, lng: -97.74, city: "Austin", state: "TX" },
-  { zip: "77002", lat: 29.76, lng: -95.36, city: "Houston", state: "TX" },
-  { zip: "71101", lat: 32.51, lng: -93.75, city: "Shreveport", state: "LA" },
-  { zip: "73102", lat: 35.47, lng: -97.52, city: "Oklahoma City", state: "OK" },
-];
-
 async function main() {
   loadEnvConfig(process.cwd());
   const isProdDb = (process.env.DATABASE_URL ?? "").startsWith("postgres");
@@ -46,6 +32,7 @@ async function main() {
   const { getDb } = await import("../src/server/db/client");
   const { runMigrations } = await import("../src/server/db/migrate");
   const { seedBase } = await import("../src/server/db/seed-base");
+  const { loadZipCentroids } = await import("../src/server/db/load-zips");
   const schema = await import("../src/server/db/schema");
   const { getAuth } = await import("../src/server/auth");
   const { buildContext } = await import("../src/server/context");
@@ -64,10 +51,7 @@ async function main() {
     process.exit(0);
   }
 
-  await db
-    .insert(schema.zipCentroids)
-    .values(DEMO_ZIPS.map((z) => ({ ...z, timezone: TZ })))
-    .onConflictDoNothing();
+  await loadZipCentroids(db);
 
   const password = process.env.DEMO_PASSWORD || "demo-password-2026";
   async function user(email: string, name: string) {

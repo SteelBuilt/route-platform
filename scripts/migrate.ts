@@ -3,6 +3,7 @@
 import { loadEnvConfig } from "@next/env";
 import { getDb } from "../src/server/db/client";
 import { runMigrations } from "../src/server/db/migrate";
+import { loadZipCentroids } from "../src/server/db/load-zips";
 import { seedBase } from "../src/server/db/seed-base";
 
 async function main() {
@@ -11,6 +12,8 @@ async function main() {
   loadEnvConfig(process.cwd());
   await runMigrations();
   await seedBase(getDb());
+  const zips = await loadZipCentroids(getDb());
+  if (zips) console.log(`Loaded ${zips} ZIP centroids (Census ZCTA).`);
   console.log("Database migrated and reference data loaded.");
   process.exit(0);
 }
