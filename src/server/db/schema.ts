@@ -196,6 +196,8 @@ export const organizations = pgTable("organizations", {
   // "Primary sector", chosen at onboarding. Only a default for route category
   // and discovery filters; never a restriction. Null for pre-sector orgs.
   industrySector: text("industry_sector", { enum: INDUSTRY_SECTORS }),
+  // Set when an owner/dispatcher dismisses the one-time "set your primary sector" prompt.
+  sectorPromptDismissedAt: ts("sector_prompt_dismissed_at"),
   canPost: boolean("can_post").notNull().default(false),
   canProvide: boolean("can_provide").notNull().default(false),
   phone: text("phone"),

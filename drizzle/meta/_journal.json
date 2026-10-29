@@ -36,6 +36,13 @@
       "when": 1793229521794,
       "tag": "0004_tube_steel_installer",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793289194142,
+      "tag": "0005_sector_prompt",
+      "breakpoints": true
     }
   ]
 }

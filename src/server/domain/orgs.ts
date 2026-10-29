@@ -21,7 +21,7 @@ import {
 } from "../db/schema";
 import { Conflict, Forbidden, Invalid, NotFound } from "../errors";
 import { withSystem, withTenant } from "../tenant";
-import { INDUSTRY_SECTORS, isValidSectorRole } from "@/lib/sectors";
+import { INDUSTRY_SECTORS, isIndustrySector, isValidSectorRole } from "@/lib/sectors";
 
 export const createOrgInput = z
   .object({
@@ -118,6 +118,33 @@ export async function createOrganization(
       metadata: { createdBy: userId, kind: org.kind, industrySector: org.industrySector },
     });
     return { org, membership: m };
+  });
+}
+
+// Set or change the primary sector after onboarding (settings page or the
+// one-time prompt). It's a default only, so changing it never affects routes.
+export async function setPrimarySector(ctx: RequestContext, sector: string) {
+  requireCapability(ctx, "org.manage");
+  if (!isIndustrySector(sector)) throw new Invalid("Choose your primary sector");
+  if (!isValidSectorRole(sector, ctx.org.kind)) {
+    throw new Invalid("That sector isn't available for your company type");
+  }
+  await withTenant(ctx, async (tx) => {
+    const [before] = await tx.select({ s: organizations.industrySector }).from(organizations).where(eq(organizations.id, ctx.orgId));
+    await tx.update(organizations).set({ industrySector: sector }).where(eq(organizations.id, ctx.orgId));
+    await audit(tx, ctx, {
+      action: "org.primary_sector_set",
+      targetType: "organization",
+      targetId: ctx.orgId,
+      metadata: { from: before?.s ?? null, to: sector },
+    });
+  });
+}
+
+export async function dismissSectorPrompt(ctx: RequestContext) {
+  requireCapability(ctx, "org.manage");
+  await withTenant(ctx, async (tx) => {
+    await tx.update(organizations).set({ sectorPromptDismissedAt: new Date() }).where(eq(organizations.id, ctx.orgId));
   });
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE "organizations" ADD COLUMN "sector_prompt_dismissed_at" timestamp with time zone;

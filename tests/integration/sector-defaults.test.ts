@@ -9,12 +9,12 @@ import { buildingCategories, organizations, memberships, type OrgKind } from "@/
 import { listCategories } from "@/server/domain/catalog";
 import { searchRoutes } from "@/server/domain/discovery";
 import { applyToRoute, getRouteForProvider, listApplicants } from "@/server/domain/marketplace";
-import { createOrganization } from "@/server/domain/orgs";
+import { createOrganization, dismissSectorPrompt, setPrimarySector } from "@/server/domain/orgs";
 import { saveProviderProfile } from "@/server/domain/profiles";
 import { createDraft, publishRoute } from "@/server/domain/routes";
 import { defaultCategoryId } from "@/server/domain/sector-defaults";
 import { categoryId, loadTestCentroids, routeFixture } from "../fixtures";
-import { freshDb, makeUser } from "../helpers";
+import { addMember, freshDb, makeUser } from "../helpers";
 
 async function org(sector: IndustrySector, kind: OrgKind) {
   const u = await makeUser();
@@ -68,6 +68,41 @@ describe("primary sector as a default", () => {
     const found = await searchRoutes(tubeCrew, {});
     expect(found.results.map((r) => r.id)).toContain(redIron);
     await expect(applyToRoute(tubeCrew, redIron, {})).resolves.toBeTruthy();
+  });
+});
+
+describe("setting the primary sector later", () => {
+  async function legacyOrg(kind: OrgKind) {
+    const u = await makeUser();
+    const [o] = await getDb()
+      .insert(organizations)
+      .values({ name: "Legacy", slug: `legacy-${kind}-${Date.now()}`, kind, canPost: kind === "poster", canProvide: kind !== "poster" })
+      .returning();
+    await getDb().insert(memberships).values({ orgId: o.id, userId: u.id, role: "owner", isLeaderSeat: true });
+    return buildContext(u.id, o.id);
+  }
+
+  it("an org without a sector can set one; the prompt state is in context", async () => {
+    const ctx = await legacyOrg("installer");
+    expect(ctx.org).toMatchObject({ primarySector: null, sectorPromptDismissed: false });
+    await setPrimarySector(ctx, "tube_steel");
+    const after = await buildContext(ctx.userId, ctx.orgId!);
+    expect(after.org?.primarySector).toBe("tube_steel");
+    expect(await defaultCategoryId(after)).toBe(await categoryId("tube-steel"));
+  });
+
+  it("rejects sectors that don't allow the org's company type, and non-managers", async () => {
+    const ctx = await legacyOrg("installer");
+    await expect(setPrimarySector(ctx, "portable_sheds")).rejects.toMatchObject({ status: 422 });
+    await expect(setPrimarySector(ctx, "nonsense")).rejects.toMatchObject({ status: 422 });
+    const leader = await addMember(ctx.orgId!, "crew_leader");
+    await expect(setPrimarySector(leader, "red_iron")).rejects.toMatchObject({ status: 403 });
+  });
+
+  it("dismissing the prompt is remembered", async () => {
+    const ctx = await legacyOrg("poster");
+    await dismissSectorPrompt(ctx);
+    expect((await buildContext(ctx.userId, ctx.orgId!)).org?.sectorPromptDismissed).toBe(true);
   });
 });
 

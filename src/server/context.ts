@@ -25,6 +25,7 @@ export type RequestContext = {
     timezone: string;
     isDemo: boolean;
     primarySector: IndustrySector | null;
+    sectorPromptDismissed: boolean;
   } | null;
   capabilities: Set<Capability>;
   sessionId?: string;
@@ -68,6 +69,7 @@ export async function buildContext(
           timezone: pick.o.timezone,
           isDemo: pick.o.isDemo,
           primarySector: pick.o.industrySector,
+          sectorPromptDismissed: !!pick.o.sectorPromptDismissedAt,
         }
       : null,
     capabilities: pick ? capabilitiesFor(pick.m.role, pick.m.permissionOverrides) : new Set(),

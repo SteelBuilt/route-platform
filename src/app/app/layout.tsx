@@ -5,6 +5,7 @@ import { signOutAction } from "@/app/(auth)/actions";
 import { requireOrgSession } from "@/server/session";
 import { listMyOrgs } from "@/server/domain/orgs";
 import { OrgSwitcher } from "./org-switcher";
+import { SectorPrompt } from "./sector-prompt";
 import { VerifyEmailBanner } from "./verify-banner";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -15,7 +16,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (ctx.org.canPost && ctx.capabilities.has("routes.post")) links.push(["/app/routes", "Routes"], ["/app/providers", "Providers"]);
   if (ctx.org.canProvide && ctx.capabilities.has("marketplace.browse")) links.push(["/app/find", "Find work"], ["/app/work", "My work"]);
   if (ctx.org.canProvide && canManage) links.push(["/app/profile", "Profile"]);
-  if (canManage) links.push(["/app/team", "Team"]);
+  if (canManage) links.push(["/app/team", "Team"], ["/app/settings", "Settings"]);
+  const showSectorPrompt = canManage && !ctx.org.primarySector && !ctx.org.sectorPromptDismissed;
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b-2 border-line bg-white">
@@ -50,6 +52,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         {!ctx.emailVerified && (ctx.org.canPost || ctx.capabilities.has("applications.submit")) && (
           <div className="mb-6">
             <VerifyEmailBanner email={ctx.email} />
+          </div>
+        )}
+        {showSectorPrompt && (
+          <div className="mb-6">
+            <SectorPrompt kind={ctx.org.kind} />
           </div>
         )}
         {children}

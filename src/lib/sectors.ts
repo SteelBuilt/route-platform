@@ -66,6 +66,11 @@ export const SECTOR_DEFAULT_CATEGORY: Record<IndustrySector, string> = {
   portable_sheds: "portable-buildings",
 };
 
+// Sectors an existing org can choose given its company type (it can't change type).
+export function sectorsForRole(role: CompanyRole): IndustrySector[] {
+  return INDUSTRY_SECTORS.filter((s) => isValidSectorRole(s, role));
+}
+
 export function isIndustrySector(v: unknown): v is IndustrySector {
   return typeof v === "string" && (INDUSTRY_SECTORS as readonly string[]).includes(v);
 }

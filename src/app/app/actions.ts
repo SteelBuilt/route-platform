@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ROLES, type Role } from "@/server/db/schema";
 import { createInvitation, revokeInvitation } from "@/server/domain/invitations";
-import { changeMemberRole, removeMember, setActiveOrg, setPermissionOverrides } from "@/server/domain/orgs";
+import {
+  changeMemberRole,
+  dismissSectorPrompt,
+  removeMember,
+  setActiveOrg,
+  setPermissionOverrides,
+  setPrimarySector,
+} from "@/server/domain/orgs";
 import { getAuth } from "@/server/auth";
 import { Invalid } from "@/server/errors";
 import { hit } from "@/server/ratelimit";
@@ -17,6 +24,23 @@ export async function resendVerificationAction(_: ActionState): Promise<ActionSt
     await hit(`verify-resend:${ctx.userId}`, 5, 3600);
     await getAuth().api.sendVerificationEmail({ body: { email: ctx.email, callbackURL: "/app" } });
     return `Confirmation email sent to ${ctx.email}.`;
+  });
+}
+
+export async function setPrimarySectorAction(_: ActionState, form: FormData): Promise<ActionState> {
+  const ctx = await requireOrgSession();
+  return runAction(async () => {
+    await setPrimarySector(ctx, String(form.get("primarySector") ?? ""));
+    revalidatePath("/app", "layout");
+    return "Primary sector saved.";
+  });
+}
+
+export async function dismissSectorPromptAction(_: ActionState): Promise<ActionState> {
+  const ctx = await requireOrgSession();
+  return runAction(async () => {
+    await dismissSectorPrompt(ctx);
+    revalidatePath("/app", "layout");
   });
 }
 
