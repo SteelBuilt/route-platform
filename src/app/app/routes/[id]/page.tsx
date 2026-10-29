@@ -23,6 +23,36 @@ import {
 
 export const metadata: Metadata = { title: "Route" };
 
+// Readable names for the fields recorded in route version history.
+const FIELD_LABELS: Record<string, string> = {
+  title: "title",
+  buildingCategoryId: "building category",
+  jobType: "job type",
+  visibility: "visibility",
+  invitedProviderOrgIds: "invited providers",
+  pickup: "pickup address",
+  pickupTimezone: "pickup time zone",
+  pickupWindowStart: "pickup window",
+  pickupWindowEnd: "pickup window",
+  estimatedDurationMinutes: "estimated duration",
+  crewSizeRequired: "crew size",
+  loadingResponsibility: "loading",
+  unloadingResponsibility: "unloading",
+  responsibilityNotes: "loading notes",
+  compensationMode: "pricing",
+  compensationBasis: "pay basis",
+  compensationUnitLabel: "pay unit",
+  compensationCents: "pay",
+  providerNotes: "notes for applicants",
+  assignmentNotes: "notes for accepted provider",
+  internalNotes: "internal notes",
+  applicationDeadline: "application deadline",
+  expiresAt: "listing expiry",
+  equipmentTypeIds: "equipment",
+  qualificationTypeIds: "qualifications",
+  stops: "stops",
+};
+
 const DONE: Record<string, string> = {
   published: "Published. Matching providers can now find this route.",
   unpublished: "Moved back to draft.",
@@ -326,7 +356,9 @@ export default async function RouteDetail({
                   {v.changeKind === "created" ? "Created" : v.changeKind === "material" ? "Material change" : "Minor edit"} ·{" "}
                   {formatInZone(v.createdAt, tz, { withZone: false })}
                   {v.changedFields.length > 0 && v.changeKind !== "created" && (
-                    <span className="block text-muted">{v.changedFields.join(", ")}</span>
+                    <span className="block text-muted">
+                      Changed: {[...new Set(v.changedFields.map((f) => FIELD_LABELS[f] ?? f))].join(", ")}
+                    </span>
                   )}
                 </li>
               ))}

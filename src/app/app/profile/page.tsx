@@ -75,14 +75,16 @@ export default async function ProfilePage() {
             className="block w-full rounded-lg border-2 border-line px-3 py-2 text-base"
           />
         </Field>
-        <div className="grid grid-cols-3 gap-3">
-          <Field label="Years in business">
-            <Input name="yearsExperience" type="number" min={0} defaultValue={p.profile?.yearsExperience ?? ""} />
-          </Field>
-          <Field label="Crew size from">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="col-span-2 sm:col-span-1">
+            <Field label="Years in business">
+              <Input name="yearsExperience" type="number" min={0} defaultValue={p.profile?.yearsExperience ?? ""} />
+            </Field>
+          </div>
+          <Field label="Smallest crew">
             <Input name="crewSizeMin" type="number" min={1} defaultValue={p.profile?.crewSizeMin ?? ""} />
           </Field>
-          <Field label="to">
+          <Field label="Largest crew">
             <Input name="crewSizeMax" type="number" min={1} defaultValue={p.profile?.crewSizeMax ?? ""} />
           </Field>
         </div>

@@ -94,6 +94,10 @@ test("a route is posted, applied to, awarded and accepted", async ({ browser }) 
   // --- Provider: accept; private details are released
   await crew.reload();
   await expect(crew.getByText("You've been awarded this route")).toBeVisible();
+  // At phone width the award card sits above the route details, not below the stops.
+  const awardTop = (await crew.getByText("You've been awarded this route").boundingBox())!.y;
+  const pickupTop = (await crew.getByRole("heading", { name: "Pickup" }).boundingBox())!.y;
+  expect(awardTop).toBeLessThan(pickupTop);
   await crew.getByRole("button", { name: "Accept assignment" }).click();
   await expect(crew.getByText("Assignment accepted.")).toBeVisible();
   await crew.reload();

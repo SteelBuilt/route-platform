@@ -178,7 +178,8 @@ export default async function ProviderRoutePage({
           )}
         </div>
 
-        <aside className="space-y-4">
+        {/* On phones, an award waiting for an answer goes above the route details. */}
+        <aside className={pendingAward ? "order-first space-y-4 lg:order-none" : "space-y-4"}>
           {pendingAward && (
             <Card className="border-amber-500">
               <h2 className="text-lg font-bold">You&apos;ve been awarded this route</h2>

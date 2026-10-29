@@ -4,13 +4,13 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 
 ## Current state
 
-- **Phase 1 complete (2026-10-28)** on branch `phase-1`. Waiting for owner review before Phase 2.
-- **Final checks:** `npm test` 187 passed / 0 failed (12 files). `npm run test:e2e` 8 passed / 0 failed (4 specs × mobile + desktop). Typecheck, lint and `next build` clean.
+- **Phase 1 complete and approved (2026-10-29)** on branch `phase-1`, also pushed as `main`. Next: Phase 2 on a `phase-2` branch.
+- **Final checks (2026-10-29):** `npm test` 202 passed / 0 failed (13 files). `npm run test:e2e` 8 passed / 0 failed (4 specs × mobile + desktop). Typecheck, lint and `next build` clean.
 - **Browser-verified:**
-  - Playwright, both viewports: sign up, email confirmation via outbox, onboarding with primary sector, invite and accept crew member, post route, publish, find (sector default filter), apply, award, accept, released addresses.
-  - Manual at 375×812: landing, onboarding, team, admin catalog, routes list, poster route page with applicant comparison and award controls, route editor, find work.
-- **Not clicked in a browser** (covered by integration tests only): duplicate, save as template, file upload/download links, version history panel, withdraw, decline, revoke, preferred-provider page, profile edit page.
-- **GitHub:** waiting on the owner to create the private repo, then push.
+  - Playwright, both viewports: sign up, email confirmation via outbox, onboarding with primary sector, invite and accept crew member, post route, publish, find (sector default filter), apply, award (card above details on phones), accept, released addresses.
+  - Manual at 375×812: landing, onboarding, team, admin catalog, settings + one-time sector prompt (save and "Not now"), routes list, route editor, edit → version history, duplicate, save as template → new route from template, file upload → download link (tampered link refused), award → revoke → award again, applicant comparison, providers page add/remove, find work, apply → withdraw → re-apply, decline, profile editor save.
+  - Fixed during the click-through: profile number fields misaligned on phones; version history showed raw field names; award Accept/Decline card was below all stops on phones.
+- **GitHub:** https://github.com/SteelBuilt/route-platform (private): `phase-1` and `main`.
 
 ## Phase 1: Assessment, foundation, core marketplace
 
@@ -74,6 +74,7 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 - [ ] Map view (Mapbox), saved searches, saved routes
 - [ ] Free crew-member scoping (test 16)
 - [ ] Downloadable route summary
+- [ ] Direct-to-storage uploads (Netlify 6 MB limit): browser uploads straight to R2 with presigned URLs, server validates after upload
 
 ## Phase 3: Trust, billing, admin (outline)
 - [ ] Stripe (test mode) checkout, portal, webhooks, trials, seats, grace, restriction (tests 1, 11, 12), all behind `billing.enabled = false`
@@ -125,6 +126,7 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 | 2026-10-28 | Email/password auth for Phase 1; magic-link sign-in deferred | Fewer moving parts; invitations already prove email ownership. Magic link can be added via Better Auth plugin without schema change. |
 | 2026-10-28 | Onboarding asks for an **industry sector** (Red Iron, Cold Formed Steel, Tube Steel, Portable Sheds) before the company role; roles are limited per sector (`src/lib/sectors.ts`), enforced in `createOrganization` and by a DB check constraint. Existing orgs keep a null sector. | Owner request. |
 | 2026-10-28 | Primary sector is a default only (preselects route category; default discovery filter, clearable). Matching uses profile building systems: "Only my building systems" filter, "Not in your listed systems" badges, applicant comparison flag. Never blocks posting or applying. Cold Formed Steel added under Metal buildings. Tube Steel allows "Installation company or independent crew". | Owner answers. |
+| 2026-10-29 | Building-type mismatch stays a warning (applying never blocked); Census ZCTA centroids loaded; primary sector editable on Settings with a one-time prompt ("Not now" remembered per org) | Owner answers. |
 | 2026-10-28 | Status-changing actions redirect with a `done` message | The submitting form disappears after publish/award/apply/accept, so its own message was lost (found by the e2e test). |
 | 2026-10-28 | Repo git author set to "SteelBuilt Systems" <sales@steelbuiltsystems.com> (repo-local only) | Commits were failing with no identity configured; owner can change it with `git config user.name`. |
 
@@ -136,14 +138,12 @@ Status legend: `[ ]` not started, `[~]` in progress, `[x]` done and tested. Item
 4. Founder discount percent and the deadline to convert (config placeholders until set).
 5. Netlify's free tier can pause the site when the monthly credits run out, and its terms allow removing free projects without notice. Are you OK with that risk for the beta, given the ~$19/month upgrade path?
 
-6. Should applying to a marketplace route require the route's building type to be in the provider's profile, or stay a visible warning (current behavior)?
-7. May I download the Census ZIP centroid file (public domain, ~1 MB) so distance search works for every US ZIP?
-8. Existing orgs created before onboarding asked for a primary sector have none. Add a way to set it on the company profile/settings page?
+(Questions 6–8 answered 2026-10-29: building-type mismatch stays a warning; Census ZIP data loaded; primary sector settable on Settings with a one-time prompt.)
 
 ## Known failures / limitations
 
-- Netlify functions cap request bodies at ~6 MB, so larger uploads will fail there. Phase 4: switch to direct-to-R2 presigned uploads.
-- ZIP distance needs the Census ZCTA centroid table (public, ~1 MB download, needs owner OK). Only demo/test ZIPs are loaded now; other ZIPs skip the distance filter with a notice.
+- Netlify functions cap request bodies at ~6 MB, so larger uploads will fail there until direct-to-storage uploads land (Phase 2 checklist).
+- ZIP distance uses Census 2026 ZCTA internal points (33,791 ZIPs, `data/zcta-centroids.csv`, loaded on migrate). The centroid's state is derived from the ZIP prefix; stop and pickup states always come from the entered address. ZCTAs don't cover PO-box-only ZIPs; those skip the distance filter with a notice.
 - Discovery doesn't yet filter by equipment/qualifications (brief §8); saved searches and map are Phase 2.
 - Messages don't exist yet (Phase 2), so test 15 doesn't cover them.
 - `npm audit`: 4 moderate advisories in drizzle-kit's bundled esbuild (dev-only tool, affects its dev server, not the app). Fix requires a breaking drizzle-kit downgrade; revisit when drizzle-kit updates.
